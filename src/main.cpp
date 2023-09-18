@@ -1,6 +1,8 @@
-#include "mesh.hpp"
+#include "render/mesh.hpp"
+#include "render/render.hpp"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <assert.h>
 
 static GLFWwindow *window = NULL;
 static int swapAndPollInput();
@@ -62,9 +64,19 @@ int main()
     window = glfwCreateWindow(1024, 768, "GL test app", NULL, NULL);
     glfwMakeContextCurrent(window);
 
-    model::Model human_with_skeleton{};
+    if (glewInit() != GLEW_OK)
+        throw std::runtime_error("glewInit failed");
 
-    human_with_skeleton.load_model("asset/alliance.obj");
+    assimp_model::Model human_with_skeleton{};
+
+    human_with_skeleton.load_model("asset/models/alliance.obj");
+
+    render::Shader shader{
+        {{GL_VERTEX_SHADER, "asset/shaders/Basic.vert"}, {GL_FRAGMENT_SHADER, "asset/shaders/Basic.frag"},}
+    };
+
+    // assert(shader.compile() == true);
+    shader.compile();
 
     // Event loop
     run();

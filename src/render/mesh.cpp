@@ -1,6 +1,6 @@
 #include "mesh.hpp"
 
-namespace model
+namespace assimp_model
 {
     auto Mesh::setup_mesh() noexcept -> void
     {

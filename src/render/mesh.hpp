@@ -11,7 +11,7 @@
 #include <vector>
 #include <iostream>
 
-namespace model
+namespace assimp_model
 {
     struct Vertex final
     {

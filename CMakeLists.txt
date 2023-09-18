@@ -17,7 +17,7 @@ file(GLOB_RECURSE HEADER_FILES
 	${CMAKE_SOURCE_DIR}/src/*.hpp)
 
 # Configure assets header file
-configure_file(src/cmake-source-dir.hpp src/cmake-source-dir.hpp)
+configure_file(src/render/cmake-source-dir.hpp.in src/render/cmake-source-dir.hpp)
 include_directories(${CMAKE_BINARY_DIR}/src)
 	
 # Define the executable
