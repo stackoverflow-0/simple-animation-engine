@@ -5,6 +5,26 @@
 namespace assimp_model
 {
     constexpr int animation_index_texture_width = 1024;
+
+    auto Mesh::append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<driven_bone>& append_bone_weight) noexcept -> void
+    {
+        auto indices_offset = vertices.size();
+        int i{0};
+        for (auto v: append_vertices) {
+            v.driven_bone_id = append_bone_weight[i].driven_bone_id;
+            v.driven_bone_weight = append_bone_weight[i].driven_bone_weight;
+            // v.b_and_w = glm::vec4(0,0.9,0,0);
+            i++;
+            vertices.emplace_back(v);
+        }
+        // for (auto bw: append_bone_weight) {
+        //     driven_bone_and_weight.emplace_back(bw);
+        // }
+        for (auto i: append_indices) {
+            indices.emplace_back(indices_offset + i);
+        }
+    }
+
     auto Mesh::setup_mesh() noexcept -> void
     {
         // create buffers/arrays
@@ -35,7 +55,10 @@ namespace assimp_model
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, texcoords));
         // vertex animation texture coords
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, driven_bone_texcoord));
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, driven_bone_id));
+
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, driven_bone_weight));
 
         glBindVertexArray(0);
     }
@@ -53,9 +76,6 @@ namespace assimp_model
         }
         // retrieve the directory path of the filepath
         directory = path.substr(0, path.find_last_of('/'));
-
-        // process ASSIMP's root node recursively
-        processNode(scene->mRootNode, scene);
 
         auto processSkeleton = [&]()-> void {
             if (scene->HasAnimations()) {
@@ -139,6 +159,10 @@ namespace assimp_model
             walk_bone_tree();
         };
         processSkeleton();
+
+         // process ASSIMP's root node recursively
+        processNode(scene->mRootNode, scene);
+        uniform_mesh.setup_mesh();
         return true;
     }
 
@@ -150,7 +174,7 @@ namespace assimp_model
             // the node object only contains indices to index the actual objects in the scene.
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-            sub_meshs.push_back(processMesh(mesh, scene));
+            processMesh(mesh, scene);
         }
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -159,7 +183,7 @@ namespace assimp_model
         }
     }
 
-    auto Model::processMesh(aiMesh *mesh, const aiScene *scene) -> Mesh
+    auto Model::processMesh(aiMesh *mesh, const aiScene *scene) -> void
     {
         // data to fill
         static int vertex_idx = 0;
@@ -194,12 +218,9 @@ namespace assimp_model
             else
                 vertex.texcoords = glm::vec2(0.0f, 0.0f);
             
-            vertex.driven_bone_texcoord = glm::vec2(vertex_idx / animation_index_texture_width, vertex_idx % animation_index_texture_width);
+            // vertex.b_and_w = vertex_idx;
             vertex_idx++;
 
-            auto& driven_bone_num = mesh->mBones[i]->mNumWeights;
-            auto& weights =  mesh->mBones[i]->mWeights;
-            
             vertices.push_back(vertex);
         }
         // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
@@ -211,7 +232,41 @@ namespace assimp_model
                 indices.push_back(face.mIndices[j]);
         }
 
-        // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices);
+        std::vector<driven_bone> driven_bone_and_weight{};
+        driven_bone_and_weight.resize(vertices.size());
+
+        auto& bones = mesh->mBones;
+        auto bone_num = mesh->mNumBones;
+        for (auto i = 0; i < bone_num; i++) {
+            auto& bone = bones[i];
+            auto bone_id = bone_name_to_id.at(bone->mName.C_Str());
+            auto bone_drive_vert_num = bone->mNumWeights;
+            for (auto j = 0; j < bone_drive_vert_num; j++) {
+                auto vert_id = bone->mWeights[j].mVertexId;
+                auto vert_weight = bone->mWeights[j].mWeight;
+                auto& b_and_w = driven_bone_and_weight[vert_id];
+                if (vert_weight < 0.1f) {
+                    continue;
+                }
+                if (b_and_w.driven_bone_id[0] == 0) {
+                    b_and_w.driven_bone_id[0] = vert_id;
+                    b_and_w.driven_bone_weight[0] = vert_weight;
+                    b_and_w.driven_bone_weight[1] = 1.0f - b_and_w.driven_bone_weight[0];
+                } else if (b_and_w.driven_bone_id[1] == 0) {
+                    b_and_w.driven_bone_id[1] = vert_id;
+                    b_and_w.driven_bone_weight[1] = vert_weight;
+                    b_and_w.driven_bone_weight[2] = 1.0f - b_and_w.driven_bone_weight[0] - - b_and_w.driven_bone_weight[1];
+                } else if (b_and_w.driven_bone_id[2] == 0) {
+                    b_and_w.driven_bone_id[2] = vert_id;
+                    b_and_w.driven_bone_weight[2] = vert_weight;
+                    b_and_w.driven_bone_weight[3] =  1.0f - b_and_w.driven_bone_weight[0] - - b_and_w.driven_bone_weight[1] - b_and_w.driven_bone_weight[2];
+                } else if (b_and_w.driven_bone_id[3] == 0) {
+                    b_and_w.driven_bone_id[3] = vert_id;
+                    // b_and_w.driven_bone_weight[3] = vert_weight;
+                }
+            }
+        }
+
+        uniform_mesh.append_mesh(vertices, indices, driven_bone_and_weight);
     }
 } // namespace model

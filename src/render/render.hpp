@@ -38,6 +38,8 @@ namespace render
         auto setUniformMatrix3fv(const std::string &uniform_name, const glm::mat3 &matrix) -> void;
         auto setUniformMatrix4fv(const std::string &uniform_name, const glm::mat4 &matrix) -> void;
 
+        auto setUniformBuffer(const std::string &uniform_name, const std::vector<glm::vec4>& buffer);
+
         auto getUniformLocation(const std::string &uniform_name) -> bool;
     };
 

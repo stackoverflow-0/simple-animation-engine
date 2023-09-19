@@ -3,6 +3,7 @@
 in vec3 o_position;
 in vec3 o_normal;
 in vec2 o_texcoord;
+in float weight;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -18,5 +19,5 @@ void main()
 	vec3 finalColor = vec3(0.5, 0.5, 0.5);
 	finalColor *= max(0.0f, dot(n, frag_pos));
 	
-	fragColor = vec4(finalColor, 1.0f);
+	fragColor = vec4(weight, finalColor.yz, 1.0f);
 }

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <thread>
 
 int main()
 {
@@ -17,7 +18,12 @@ int main()
     assimp_model::Model human_with_skeleton{};
 
     human_with_skeleton.load_model("asset/models/human-with-anim.fbx");
-    
+
+    // auto human_with_skeleton_load_model = [&]() -> void {
+    //     human_with_skeleton.load_model("asset/models/human-with-anim.fbx");
+    // };
+
+    // auto human_with_skeleton_load_model_thd = std::thread(human_with_skeleton_load_model);
 
     render::Shader shader{
         {{GL_VERTEX_SHADER, "asset/shaders/Basic.vert"}, {GL_FRAGMENT_SHADER, "asset/shaders/Basic.frag"},}
@@ -43,12 +49,12 @@ int main()
         world_matrix = glm::scale(world_matrix, glm::vec3{0.005f});
         assert(shader.apply() == true);
         time += 0.01f;
+        // shader.setUniform1f("time", time);
         shader.setUniformMatrix4fv("world", world_matrix);
         shader.setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         shader.setUniform3fv("cam_pos", cam_position);
         shader.apply();
-
         human_with_skeleton.draw();
     };
 
@@ -71,6 +77,7 @@ int main()
 
     // Event loop
     run();
+    
     // Cleanup
     glfwTerminate();
     return 0;

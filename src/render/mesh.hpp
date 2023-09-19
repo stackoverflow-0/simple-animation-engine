@@ -18,12 +18,18 @@
 
 namespace assimp_model
 {
+    struct driven_bone final
+    {
+        glm::vec4 driven_bone_id{};
+        glm::vec4 driven_bone_weight{};
+    };
     struct Vertex final
     {
         glm::vec3 position{};
         glm::vec3 normal{};
         glm::vec2 texcoords{};
-        glm::vec2 driven_bone_texcoord{};
+        glm::vec4 driven_bone_id{};
+        glm::vec4 driven_bone_weight{};
     };
 
     struct Bone final
@@ -53,14 +59,15 @@ namespace assimp_model
         unsigned int vbo{};
         unsigned int ebo{};
         std::vector<Vertex> vertices{};
-        std::vector<unsigned int> indices;
+        std::vector<unsigned int> indices{};
+        // std::vector<glm::vec4> driven_bone_and_weight{};
 
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
         {
             this->vertices = vertices;
             this->indices = indices;
             // now that we have all the required data, set the vertex buffers and its attribute pointers.
-            setup_mesh();
+            // setup_mesh();
         }
 
         auto draw() noexcept -> void
@@ -71,29 +78,29 @@ namespace assimp_model
             glBindVertexArray(0);
         }
 
+        auto append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<driven_bone>& append_bone_weight) noexcept -> void;
+
         auto setup_mesh() noexcept -> void;
     };
 
     struct Model final
     {
-        std::vector<Mesh> sub_meshs{};
+        Mesh uniform_mesh = Mesh({}, {});
         std::vector<Bone> bones{};
         std::unordered_map<std::string, int> bone_name_to_id{};
         std::vector<Track> tracks{};
         std::string directory;
+        
 
         auto draw() noexcept -> void
         {
-            for (auto &sub_mesh : sub_meshs)
-            {
-                sub_mesh.draw();
-            }
+            uniform_mesh.draw();
         }
 
         auto load_model(std::string const path) noexcept -> bool;
 
         auto processNode(aiNode *node, const aiScene *scene) -> void;
 
-        auto processMesh(aiMesh *mesh, const aiScene *scene) -> Mesh;
+        auto processMesh(aiMesh *mesh, const aiScene *scene) -> void;
     };
 } // namespace mesh

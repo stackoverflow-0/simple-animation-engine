@@ -238,7 +238,5 @@ namespace render
         } else {
             return false;
         }
-        
-
     }
 } // namespace render
