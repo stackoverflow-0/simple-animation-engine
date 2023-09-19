@@ -1,10 +1,11 @@
 #include "render.hpp"
-#include "cmake-source-dir.hpp"
+#include "render/cmake-source-dir.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <assert.h>
 
 namespace render
@@ -26,12 +27,17 @@ namespace render
             }
             else
             {
-                while (getline(inFile, line))
-                    filetext.append(line + "\n");
+                std::stringstream shader_stream{};
+                shader_stream << inFile.rdbuf();
+                filetext = shader_stream.str();
+                // while (getline(inFile, line))
+                //     filetext.append(line + "\n");
                 inFile.close();
                 return filetext;
             }
         };
+
+        program_id = glCreateProgram();
         for (auto &t2p : shader_stage_type_to_path)
         {
             auto shader_stage_type = t2p.first;
@@ -215,5 +221,24 @@ namespace render
             fprintf(stderr, "Error! Can't find uniform %s\n", uniform_name.c_str());
             return false;
         }
+    }
+
+    GLFWwindow* window::window{nullptr};
+
+    auto setup_glfw3() -> bool
+    {
+        glfwInit();
+        glfwSetErrorCallback(window::glfwErrorCallback);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+        glfwWindowHint(GLFW_CONTEXT_ROBUSTNESS, GLFW_LOSE_CONTEXT_ON_RESET);
+        window::window = glfwCreateWindow(1024, 768, "GL test app", NULL, NULL);
+        if (window::window != nullptr) {
+            glfwMakeContextCurrent(window::window);
+            return true;
+        } else {
+            return false;
+        }
+        
+
     }
 } // namespace render
