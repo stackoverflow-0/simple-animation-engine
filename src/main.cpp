@@ -32,6 +32,7 @@ int main()
     assert(shader.compile() == true);
     assert(shader.apply() == true);
     shader.setUniform1i("bone_id_and_weight", 0);
+    shader.setUniform1i("bone_bind_pose", 1);
     // shader.compile();
 
     auto cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
@@ -46,14 +47,14 @@ int main()
     auto display = [&]()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(-1, 0, 0));
-        // world_matrix = glm::rotate(world_matrix, time * glm::radians(-90.0f), glm::vec3(0, 0, 1));
+        auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 0, 1));
+        world_matrix = glm::rotate(world_matrix, time + glm::radians(180.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::scale(world_matrix, glm::vec3{0.005f});
         assert(shader.apply() == true);
         time += 0.01f;
         // shader.setUniform1f("time", time);
         shader.setUniformMatrix4fv("world", world_matrix);
-        shader.setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
+        // shader.setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         shader.setUniform3fv("cam_pos", cam_position);
         shader.apply();

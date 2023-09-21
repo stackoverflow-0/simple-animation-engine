@@ -21,7 +21,7 @@ out float weight;
 	
 uniform mat4 world;
 uniform mat4 viewProj;
-uniform mat3 normalMatrix;
+// uniform mat3 normalMatrix;
 uniform float time;
 
 // uniform sampler2D bone_and_weight;
@@ -29,27 +29,38 @@ uniform float time;
 
 uniform sampler2D bone_id_and_weight;
 
+uniform sampler2D bone_bind_pose;
+
 void main()
 {
-	o_position = vec3(world * vec4(position, 1.0));
-    o_normal   = normalMatrix * normal;
-    o_texcoord = texcoord.xy;
-
     int base_idx = int(bone_weight_offset.x);
     int bone_num = int(bone_weight_offset.y);
+    mat4 bind_mat;
     weight = 0; 
     for (int i = 0; i < bone_num; i++) {
         vec4 bw = texelFetch(bone_id_and_weight, ivec2((base_idx + i) / 2 % 1024, (base_idx + i) / 2 / 1024), 0);
         float w = (base_idx + i) % 2 == 0 ? bw.y : bw.w;
-        weight += w;
+        int bone_id = (base_idx + i) % 2 == 0 ? int(bw.x) : int(bw.z);
+        int bone_offset = bone_id * 4;
+        vec4 ma = texelFetch(bone_bind_pose, ivec2((bone_offset    ) % 1024, (bone_offset    ) / 1024), 0);
+        vec4 mb = texelFetch(bone_bind_pose, ivec2((bone_offset + 1) % 1024, (bone_offset + 1) / 1024), 0);
+        vec4 mc = texelFetch(bone_bind_pose, ivec2((bone_offset + 2) % 1024, (bone_offset + 2) / 1024), 0);
+        vec4 md = texelFetch(bone_bind_pose, ivec2((bone_offset + 3) % 1024, (bone_offset + 3) / 1024), 0);
+        bind_mat = transpose(mat4(ma, mb, mc, md));
+
+        weight += abs(ma.x);
     }
+
     // weight = 1.0;
-    if (weight > 1.001)
-        weight = -1.0;
-    if (weight < 0.999)
-        weight = -1.0;
+    // if (weight > 1.001)
+    //     weight = -1.0;
+    // if (weight < 0.999)
+    //     weight = -1.0;
 
     // weight = bone_weight_offset.x + bone_weight_offset.y;
+    o_position = vec3(world * vec4(position, 1.0));
+    o_normal   = (inverse(transpose(world * bind_mat)) * vec4(normal, 1.0)).xyz;
+    o_texcoord = texcoord.xy;
 	
-    gl_Position = viewProj * world * vec4(position, 1.0);
+    gl_Position = viewProj * world * bind_mat * vec4(position, 1.0);
 }

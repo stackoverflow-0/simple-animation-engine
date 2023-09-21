@@ -47,6 +47,7 @@ namespace assimp_model
 
     struct Track final
     {
+        std::string track_name{};
         float duration{};
         float frame_per_second{1};
         std::vector<Channel> channels{};
@@ -86,11 +87,12 @@ namespace assimp_model
     struct Model final
     {
         Mesh uniform_mesh = Mesh({}, {});
+        unsigned int bind_pose_texture{};
         std::vector<Bone> bones{};
         std::unordered_map<std::string, unsigned int> bone_name_to_id{};
         std::vector<Track> tracks{};
+        // std::vector<glm::mat4x4> bind_pose_local_with_skinning{};
         std::string directory;
-        
 
         auto draw() noexcept -> void
         {
@@ -103,6 +105,12 @@ namespace assimp_model
 
         auto processMesh(aiMesh *mesh, const aiScene *scene) -> void;
 
-        auto create_bone_id_and_weight_texure() -> void;
+        auto create_bind_pose_matrix_texure() -> void;
+
+        auto setup_model() -> void
+        {
+            uniform_mesh.setup_mesh();
+            create_bind_pose_matrix_texure();
+        }
     };
 } // namespace mesh
