@@ -34,6 +34,7 @@ namespace assimp_model
     struct Bone final
     {
         glm::mat4x4 bind_pose_local{};
+        glm::mat4x4 bind_pose_world{};
         int parent_id{};
         std::string name{};
         std::vector<int> child_id{};
@@ -51,6 +52,7 @@ namespace assimp_model
         float duration{};
         float frame_per_second{1};
         std::vector<Channel> channels{};
+        unsigned int track_anim_texture{};
     };
 
     struct Mesh final
@@ -71,7 +73,7 @@ namespace assimp_model
             // setup_mesh();
         }
 
-        auto draw() noexcept -> void
+        auto draw()  -> void
         {
             // draw mesh
             glBindVertexArray(vao);
@@ -79,9 +81,9 @@ namespace assimp_model
             glBindVertexArray(0);
         }
 
-        auto append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<glm::vec2>& append_driven_bone_offset, std::vector<std::vector<driven_bone>>& append_driven_bone_and_weight) noexcept -> void;
+        auto append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<glm::vec2>& append_driven_bone_offset, std::vector<std::vector<driven_bone>>& append_driven_bone_and_weight)  -> void;
 
-        auto setup_mesh() noexcept -> void;
+        auto setup_mesh()  -> void;
     };
 
     struct Model final
@@ -94,12 +96,12 @@ namespace assimp_model
         // std::vector<glm::mat4x4> bind_pose_local_with_skinning{};
         std::string directory;
 
-        auto draw() noexcept -> void
+        auto draw()  -> void
         {
             uniform_mesh.draw();
         }
 
-        auto load_model(std::string const path) noexcept -> bool;
+        auto load_model(std::string const path)  -> bool;
 
         auto processNode(aiNode *node, const aiScene *scene) -> void;
 
@@ -107,10 +109,18 @@ namespace assimp_model
 
         auto create_bind_pose_matrix_texure() -> void;
 
+        auto create_track_anim_matrix_texure(int track_index) -> void;
+
+        auto bind_textures() -> void;
+
         auto setup_model() -> void
         {
             uniform_mesh.setup_mesh();
             create_bind_pose_matrix_texure();
+            for (int track_id = 0; track_id < tracks.size(); track_id++) {
+                create_track_anim_matrix_texure(track_id);
+            }
+            bind_textures();
         }
     };
 } // namespace mesh

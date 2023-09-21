@@ -6,14 +6,15 @@ namespace assimp_model
 {
     constexpr int animation_texture_width = 1024;
 
-    auto Mesh::append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<glm::vec2>& append_driven_bone_offset, std::vector<std::vector<driven_bone>>& append_driven_bone_and_weight) noexcept -> void
+    auto Mesh::append_mesh(std::vector<Vertex> &append_vertices, std::vector<unsigned int> &append_indices, std::vector<glm::vec2> &append_driven_bone_offset, std::vector<std::vector<driven_bone>> &append_driven_bone_and_weight) -> void
     {
         auto indices_offset = vertices.size();
         float driven_bone_offset_offset{0.0};
         if (!vertices.empty())
             driven_bone_offset_offset = vertices.back().bone_weight_offset.x + vertices.back().bone_weight_offset.y;
         int i{0};
-        for (auto& v: append_vertices) {
+        for (auto &v : append_vertices)
+        {
             // v.driven_bone_id = append_bone_weight[i].driven_bone_id;
             // v.driven_bone_weight = append_bone_weight[i].driven_bone_weight;
             // v.b_and_w = glm::vec4(0,0.9,0,0);
@@ -21,13 +22,15 @@ namespace assimp_model
             v.bone_weight_offset = append_driven_bone_offset[i];
             i++;
             vertices.emplace_back(v);
-                // auto sz = vertices.size();
-                // if (sz >= 2)
-                //     assert(vertices[sz-1].bone_weight_offset.x == vertices[sz-2].bone_weight_offset.x + vertices[sz-2].bone_weight_offset.y);
+            // auto sz = vertices.size();
+            // if (sz >= 2)
+            //     assert(vertices[sz-1].bone_weight_offset.x == vertices[sz-2].bone_weight_offset.x + vertices[sz-2].bone_weight_offset.y);
         }
 
-        for (auto& b_and_w: append_driven_bone_and_weight) {
-            for (auto& bw: b_and_w) {
+        for (auto &b_and_w : append_driven_bone_and_weight)
+        {
+            for (auto &bw : b_and_w)
+            {
                 bone_id_and_weight.emplace_back(float(bw.driven_bone_id), bw.driven_bone_weight);
                 // bone_id_and_weight.emplace_back(float(bw.driven_bone_id), 1.0f);
             }
@@ -35,12 +38,13 @@ namespace assimp_model
         // for (auto bw: append_bone_weight) {
         //     driven_bone_and_weight.emplace_back(bw);
         // }
-        for (auto i: append_indices) {
+        for (auto i : append_indices)
+        {
             indices.emplace_back(indices_offset + i);
         }
     }
 
-    auto Mesh::setup_mesh() noexcept -> void
+    auto Mesh::setup_mesh() -> void
     {
         // create buffers/arrays
         glGenVertexArrays(1, &vao);
@@ -77,9 +81,9 @@ namespace assimp_model
         // glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, driven_bone_weight));
         // GLuint blockIndex = glGetUniformBlockIndex(programHandle, "BlobSettings");
         glGenTextures(1, &bone_weight_texture);
-        
+
         glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
-        
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, animation_texture_width, bone_id_and_weight.size() / 2 / animation_texture_width + 1, 0, GL_RGBA, GL_FLOAT, bone_id_and_weight.data());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -89,16 +93,11 @@ namespace assimp_model
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, bone_weight_texture);     
-        // glBindTexture(GL_TEXTURE_2D, 0);   
-
-        auto gen_anim_texture = [&]() -> void {
-
-        };
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
     }
 
-    auto Model::load_model(std::string const path) noexcept -> bool
+    auto Model::load_model(std::string const path) -> bool
     {
         // read file via ASSIMP
         Assimp::Importer importer;
@@ -112,75 +111,90 @@ namespace assimp_model
         // retrieve the directory path of the filepath
         directory = path.substr(0, path.find_last_of('/'));
 
-        auto processSkeleton = [&]()-> void {
-            if (scene->HasAnimations()) {
-            auto anim_num = scene->mNumAnimations;
-            tracks.resize(anim_num);
+        auto processSkeleton = [&]() -> void
+        {
+            if (scene->HasAnimations())
+            {
+                auto anim_num = scene->mNumAnimations;
+                tracks.resize(anim_num);
 
-            std::cout  << std::format("anim count {:d}\n", anim_num);
+                std::cout << std::format("anim count {:d}\n", anim_num);
 
-            for (auto anim_id = 0; anim_id < anim_num; anim_id++) {
+                for (auto anim_id = 0; anim_id < anim_num; anim_id++)
+                {
 
-                auto& track = tracks[anim_id];
+                    auto &track = tracks[anim_id];
 
-                auto anim = scene->mAnimations[anim_id];
-                auto anim_channel_num = anim->mNumChannels;
-                std::cout  << std::format("anim track name {:s}\n", anim->mName.C_Str());
+                    auto anim = scene->mAnimations[anim_id];
+                    auto anim_channel_num = anim->mNumChannels;
+                    std::cout << std::format("anim track name {:s}\n", anim->mName.C_Str());
 
-                track.track_name = std::string(anim->mName.C_Str());
-                track.duration = anim->mDuration;
-                track.frame_per_second = anim->mTicksPerSecond;
-                track.channels.resize(anim_channel_num);
+                    track.track_name = std::string(anim->mName.C_Str());
+                    track.duration = anim->mDuration;
+                    track.frame_per_second = anim->mTicksPerSecond;
+                    track.channels.resize(anim_channel_num);
 
-                for (auto channel_id = 0; channel_id < anim_channel_num; channel_id++) {
-                    auto channel_node = anim->mChannels[channel_id];
-                    auto& channel = track.channels[channel_id];
-                    if (bone_name_to_id.find(channel_node->mNodeName.C_Str()) == bone_name_to_id.end())
-                        bone_name_to_id.emplace(channel_node->mNodeName.C_Str(), bone_name_to_id.size());
-                    // std::cout << std::format("bone name to id : {:s}\n", channel_node->mNodeName.C_Str());
+                    for (auto channel_id = 0; channel_id < anim_channel_num; channel_id++)
+                    {
+                        auto channel_node = anim->mChannels[channel_id];
+                        auto &channel = track.channels[channel_id];
+                        // if (bone_name_to_id.find(channel_node->mNodeName.C_Str()) == bone_name_to_id.end())
+                        //     bone_name_to_id.emplace(channel_node->mNodeName.C_Str(), bone_name_to_id.size());
+                        // std::cout << std::format("bone name to id : {:s}\n", channel_node->mNodeName.C_Str());
 
-                    channel.rotations.resize(channel_node->mNumRotationKeys);
-                    channel.times.resize(channel_node->mNumRotationKeys);
+                        channel.rotations.resize(channel_node->mNumRotationKeys);
+                        channel.times.resize(channel_node->mNumRotationKeys);
 
-                    for (auto key_id = 0; key_id < channel_node->mNumRotationKeys; key_id++) {
-                        auto& rot = channel_node->mRotationKeys[key_id].mValue;
-                        channel.rotations[key_id] = glm::quat(rot.w, rot.x, rot.y, rot.z);
-                        channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
+                        for (auto key_id = 0; key_id < channel_node->mNumRotationKeys; key_id++)
+                        {
+                            auto &rot = channel_node->mRotationKeys[key_id].mValue;
+                            channel.rotations[key_id] = glm::quat(rot.w, rot.x, rot.y, rot.z);
+                            channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
+                        }
                     }
-                    
                 }
-            }
             }
 
             auto bone_root = scene->mRootNode;
-            
 
-            auto walk_bone_tree = [&]() -> void {
-                bones.resize(bone_name_to_id.size());
+            auto walk_bone_tree = [&]() -> void
+            {
+                // bones.resize(bone_name_to_id.size());
                 // bind_pose_local_with_skinning.resize(bone_name_to_id.size());
-                
-                std::queue<aiNode*> bone_to_be_walk({bone_root});
 
-                while (!bone_to_be_walk.empty()) {
+                std::queue<aiNode *> bone_to_be_walk({bone_root});
+
+                while (!bone_to_be_walk.empty())
+                {
                     auto bone_node = bone_to_be_walk.front();
                     bone_to_be_walk.pop();
+
                     std::string bone_name = bone_node->mName.C_Str();
+                    if (bone_name_to_id.find(bone_name) == bone_name_to_id.end())
+                        bone_name_to_id.emplace(bone_name, bone_name_to_id.size());
+
                     // std::cout << std::format("bone name : {:s}\n", bone_name);
                     std::string parent_name{};
                     int parent_id{-1};
                     std::vector<int> child_id{};
 
-                    if (bone_node->mParent != nullptr) {
+                    if (bone_node->mParent != nullptr)
+                    {
                         parent_name = bone_node->mParent->mName.C_Str();
-                        if (bone_name_to_id.find(parent_name) != bone_name_to_id.end()) {
+                        if (bone_name_to_id.find(parent_name) != bone_name_to_id.end())
+                        {
                             parent_id = bone_name_to_id.at(parent_name);
                         }
                     }
 
-                    for (auto bone_child_i = 0; bone_child_i < bone_node->mNumChildren; bone_child_i++) {
+                    for (auto bone_child_i = 0; bone_child_i < bone_node->mNumChildren; bone_child_i++)
+                    {
                         bone_to_be_walk.push(bone_node->mChildren[bone_child_i]);
                         // bone_name_to_id.at(bone_node->mChildren[bone_child_i]->mName.C_Str());
                         std::string child_name = bone_node->mChildren[bone_child_i]->mName.C_Str();
+
+                        bone_name_to_id.emplace(child_name, bone_name_to_id.size());
+
                         if (bone_name_to_id.find(child_name) != bone_name_to_id.end())
                             child_id.emplace_back(bone_name_to_id.at(child_name));
                     }
@@ -191,15 +205,17 @@ namespace assimp_model
                     //     trans_mat.c1, trans_mat.c2, trans_mat.c3, trans_mat.c4,
                     //     trans_mat.d1, trans_mat.d2, trans_mat.d3, trans_mat.d4,
                     // };
-                    if (bone_name_to_id.find(bone_name) != bone_name_to_id.end())
-                        bones[bone_name_to_id.at(bone_name)] = {{}, parent_id, bone_name, child_id};
+                    // if (bone_name_to_id.find(bone_name) != bone_name_to_id.end())
+                    bones.resize(bone_name_to_id.size());
+                    bones[bone_name_to_id.at(bone_name)] = {{}, {}, parent_id, bone_name, child_id};
                 }
             };
             walk_bone_tree();
         };
+
         processSkeleton();
 
-         // process ASSIMP's root node recursively
+        // process ASSIMP's root node recursively
         processNode(scene->mRootNode, scene);
         // uniform_mesh.setup_mesh();
         setup_model();
@@ -259,7 +275,7 @@ namespace assimp_model
             }
             else
                 vertex.texcoords = glm::vec2(0.0f, 0.0f);
-            
+
             // vertex.b_and_w = vertex_idx;
             vertex_idx++;
 
@@ -279,41 +295,84 @@ namespace assimp_model
         driven_bone_and_weight.resize(vertices.size());
         driven_bone_offset.resize(vertices.size());
 
-        auto& mesh_bones = mesh->mBones;
+        auto &mesh_bones = mesh->mBones;
         auto bone_num = mesh->mNumBones;
-        
-        for (auto i = 0; i < bone_num; i++) {
-            auto& bone = mesh_bones[i];
+
+        for (auto i = 0; i < bone_num; i++)
+        {
+            auto &bone = mesh_bones[i];
             auto bone_id = bone_name_to_id.at(bone->mName.C_Str());
             auto bone_drive_vert_num = bone->mNumWeights;
 
-            auto& bone_bind_pose = bone->mOffsetMatrix;
+            auto &bone_bind_pose = bone->mOffsetMatrix;
             auto bone_bind_pose_mat = glm::mat4x4{
-                bone_bind_pose.a1, bone_bind_pose.a2, bone_bind_pose.a3, bone_bind_pose.a4,
-                bone_bind_pose.b1, bone_bind_pose.b2, bone_bind_pose.b3, bone_bind_pose.b4,
-                bone_bind_pose.c1, bone_bind_pose.c2, bone_bind_pose.c3, bone_bind_pose.c4,
-                bone_bind_pose.d1, bone_bind_pose.d2, bone_bind_pose.d3, bone_bind_pose.d4,
+                bone_bind_pose.a1,
+                bone_bind_pose.a2,
+                bone_bind_pose.a3,
+                bone_bind_pose.a4,
+                bone_bind_pose.b1,
+                bone_bind_pose.b2,
+                bone_bind_pose.b3,
+                bone_bind_pose.b4,
+                bone_bind_pose.c1,
+                bone_bind_pose.c2,
+                bone_bind_pose.c3,
+                bone_bind_pose.c4,
+                bone_bind_pose.d1,
+                bone_bind_pose.d2,
+                bone_bind_pose.d3,
+                bone_bind_pose.d4,
             };
+            if (bones[bone_id].bind_pose_local == glm::mat4x4{})
+                bones[bone_id].bind_pose_local = bone_bind_pose_mat;
+            else if (bones[bone_id].bind_pose_local != bone_bind_pose_mat)
+            {
+                // bones[bone_id].bind_pose_local = bone_bind_pose_mat;
+                std::cout << "error: bind pose conflict\n";
+            }
 
-            bones[bone_id].bind_pose_local = bone_bind_pose_mat;
-
-            for (auto j = 0; j < bone_drive_vert_num; j++) {
+            for (auto j = 0; j < bone_drive_vert_num; j++)
+            {
                 auto vert_id = bone->mWeights[j].mVertexId;
                 auto vert_weight = bone->mWeights[j].mWeight;
-                auto& b_and_w = driven_bone_and_weight[vert_id];
-                
-                b_and_w.emplace_back(driven_bone{bone_id, vert_weight});
+                auto &b_and_w = driven_bone_and_weight[vert_id];
 
+                b_and_w.emplace_back(driven_bone{bone_id, vert_weight});
             }
         }
+
+        for (auto i = 0; i < bone_num; i++)
+        {
+            auto bone_bind_pose_world = bones[i].bind_pose_local;
+            auto bone_it = bones[i].parent_id;
+            while (bone_it != -1)
+            {
+                if (bones[bone_it].bind_pose_world == glm::mat4x4{})
+                {
+                    bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_local;
+                }
+                else
+                {
+                    bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_world;
+                    break;
+                }
+                bone_it = bones[bone_it].parent_id;
+            }
+            bones[i].bind_pose_world = bone_bind_pose_world;
+        }
+
         auto i{0};
         auto base_offset{0};
-        for (auto& b_and_w: driven_bone_and_weight) {
+        for (auto &b_and_w : driven_bone_and_weight)
+        {
             auto weight_sum{0.0f};
-            for (auto& bw: b_and_w) {
+            for (auto &bw : b_and_w)
+            {
                 weight_sum += bw.driven_bone_weight;
             }
-            assert(std::fabs(weight_sum - 1.0f) < 0.001f);
+            if (std::fabs(weight_sum - 1.0f) > 0.01f) {
+                std::cout << "vert weight < 1.0f\n";
+            }
             driven_bone_offset[i] = glm::vec2{base_offset, b_and_w.size()};
             base_offset += b_and_w.size();
             i++;
@@ -325,8 +384,9 @@ namespace assimp_model
     {
         std::vector<glm::mat4x4> tmp_bind_mat_array{};
         // tmp_bind_mat_array.resize(bones.size());
-        for (auto& bone: bones) {
-            tmp_bind_mat_array.emplace_back(bone.bind_pose_local);
+        for (auto &bone : bones)
+        {
+            tmp_bind_mat_array.emplace_back(bone.bind_pose_world);
         }
 
         glGenTextures(1, &bind_pose_texture);
@@ -341,9 +401,72 @@ namespace assimp_model
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, bind_pose_texture);
+        // glActiveTexture(GL_TEXTURE0);
+    }
+
+    auto Model::create_track_anim_matrix_texure(int track_index) -> void
+    {
+        assert(track_index < tracks.size());
+
+        auto &channels = tracks[track_index].channels;
+        auto &track_anim_texture = tracks[track_index].track_anim_texture;
+
+        auto channel_frame_num = tracks[track_index].channels.front().rotations.size();
+        auto channel_num = channels.size();
+
+        std::vector<glm::quat> tmp_anim_pose_frames{};
+
+        tmp_anim_pose_frames.resize(channel_num * channel_frame_num);
+
+        for (auto i = 0; i < channel_frame_num; i++)
+        {
+            for (auto cid = 0; cid < channels.size(); cid++)
+            {
+                if (i >= channels[cid].rotations.size())
+                {
+                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].rotations[channels[cid].rotations.size() - 1];
+                }
+                else
+                {
+                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].rotations[i];
+                }
+            }
+        }
+        glGenTextures(1, &track_anim_texture);
+        glBindTexture(GL_TEXTURE_2D, track_anim_texture);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, channel_num, channel_frame_num, 0, GL_RGBA, GL_FLOAT, tmp_anim_pose_frames.data());
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // glActiveTexture(GL_TEXTURE1);
+        // glBindTexture(GL_TEXTURE_2D, bind_pose_texture);
+        // glActiveTexture(GL_TEXTURE2 + track_index);
+        // glBindTexture(GL_TEXTURE_2D, track_anim_texture);
+        // glActiveTexture(GL_TEXTURE0);
+    }
+
+    auto Model::bind_textures() -> void
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, uniform_mesh.bone_weight_texture);
+
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, bind_pose_texture);
-        // glBindTexture(GL_TEXTURE_2D, 0);
-
+        auto track_index{0};
+        for (auto &track : tracks)
+        {
+            glActiveTexture(GL_TEXTURE2 + track_index);
+            glBindTexture(GL_TEXTURE_2D, track.track_anim_texture);
+            track_index++;
+        }
     }
 } // namespace model
