@@ -142,13 +142,16 @@ namespace assimp_model
                         //     bone_name_to_id.emplace(channel_node->mNodeName.C_Str(), bone_name_to_id.size());
                         // std::cout << std::format("bone name to id : {:s}\n", channel_node->mNodeName.C_Str());
 
-                        channel.rotations.resize(channel_node->mNumRotationKeys);
+                        channel.trans_matrix.resize(channel_node->mNumRotationKeys);
                         channel.times.resize(channel_node->mNumRotationKeys);
 
                         for (auto key_id = 0; key_id < channel_node->mNumRotationKeys; key_id++)
                         {
-                            auto &rot = channel_node->mRotationKeys[key_id].mValue;
-                            channel.rotations[key_id] = glm::quat(rot.w, rot.x, rot.y, rot.z);
+                            auto& rot = channel_node->mRotationKeys[key_id].mValue;
+                            auto& trans = channel_node->mPositionKeys[key_id].mValue;
+                            // channel.trans_matrix[key_id] = glm::translate(glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)), glm::vec3(trans.x, trans.y, trans.z));
+                            auto tmp = glm::translate(glm::mat4x4(1.0f), glm::vec3{1, 2, 3});
+                            channel.trans_matrix[key_id] = glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z));
                             channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
                         }
                     }
@@ -413,10 +416,10 @@ namespace assimp_model
         auto &channels = tracks[track_index].channels;
         auto &track_anim_texture = tracks[track_index].track_anim_texture;
 
-        auto channel_frame_num = tracks[track_index].channels.front().rotations.size();
+        auto channel_frame_num = tracks[track_index].channels.front().trans_matrix.size();
         auto channel_num = channels.size();
 
-        std::vector<glm::quat> tmp_anim_pose_frames{};
+        std::vector<glm::mat4x4> tmp_anim_pose_frames{};
 
         tmp_anim_pose_frames.resize(channel_num * channel_frame_num);
 
@@ -424,20 +427,20 @@ namespace assimp_model
         {
             for (auto cid = 0; cid < channels.size(); cid++)
             {
-                if (i >= channels[cid].rotations.size())
+                if (i >= channels[cid].trans_matrix.size())
                 {
-                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].rotations[channels[cid].rotations.size() - 1];
+                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[channels[cid].trans_matrix.size() - 1];
                 }
                 else
                 {
-                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].rotations[i];
+                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[i];
                 }
             }
         }
         glGenTextures(1, &track_anim_texture);
         glBindTexture(GL_TEXTURE_2D, track_anim_texture);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, channel_num, channel_frame_num, 0, GL_RGBA, GL_FLOAT, tmp_anim_pose_frames.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, channel_num * 4, channel_frame_num, 0, GL_RGBA, GL_FLOAT, tmp_anim_pose_frames.data());
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

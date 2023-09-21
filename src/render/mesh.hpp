@@ -42,7 +42,7 @@ namespace assimp_model
 
     struct Channel final
     {
-        std::vector<glm::quat> rotations{};
+        std::vector<glm::mat4x4> trans_matrix{};
         std::vector<float> times{};
     };
 

@@ -33,7 +33,7 @@ int main()
     assert(shader.apply() == true);
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
-    shader.setUniform1i("bone_current_pose", 3);
+    shader.setUniform1i("bone_current_pose", 2);
     // shader.compile();
 
     auto cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
