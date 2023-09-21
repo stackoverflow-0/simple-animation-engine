@@ -20,16 +20,15 @@ namespace assimp_model
 {
     struct driven_bone final
     {
-        glm::vec4 driven_bone_id{};
-        glm::vec4 driven_bone_weight{};
+        unsigned int driven_bone_id{};
+        float driven_bone_weight{};
     };
     struct Vertex final
     {
         glm::vec3 position{};
         glm::vec3 normal{};
         glm::vec2 texcoords{};
-        glm::vec4 driven_bone_id{};
-        glm::vec4 driven_bone_weight{};
+        glm::vec2 bone_weight_offset{};
     };
 
     struct Bone final
@@ -58,9 +57,10 @@ namespace assimp_model
         unsigned int vao{};
         unsigned int vbo{};
         unsigned int ebo{};
+        unsigned int bone_weight_texture{};
         std::vector<Vertex> vertices{};
         std::vector<unsigned int> indices{};
-        // std::vector<glm::vec4> driven_bone_and_weight{};
+        std::vector<glm::vec2> bone_id_and_weight{};
 
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
         {
@@ -78,7 +78,7 @@ namespace assimp_model
             glBindVertexArray(0);
         }
 
-        auto append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<driven_bone>& append_bone_weight) noexcept -> void;
+        auto append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<glm::vec2>& append_driven_bone_offset, std::vector<std::vector<driven_bone>>& append_driven_bone_and_weight) noexcept -> void;
 
         auto setup_mesh() noexcept -> void;
     };
@@ -87,7 +87,7 @@ namespace assimp_model
     {
         Mesh uniform_mesh = Mesh({}, {});
         std::vector<Bone> bones{};
-        std::unordered_map<std::string, int> bone_name_to_id{};
+        std::unordered_map<std::string, unsigned int> bone_name_to_id{};
         std::vector<Track> tracks{};
         std::string directory;
         
@@ -102,5 +102,7 @@ namespace assimp_model
         auto processNode(aiNode *node, const aiScene *scene) -> void;
 
         auto processMesh(aiMesh *mesh, const aiScene *scene) -> void;
+
+        auto create_bone_id_and_weight_texure() -> void;
     };
 } // namespace mesh

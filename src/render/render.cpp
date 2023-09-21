@@ -10,9 +10,9 @@
 
 namespace render
 {
-    auto Shader::compile() -> bool
+    auto Shader::compile(const std::string& marco) -> bool
     {
-        auto load_file = [](std::string filename) -> std::string
+        auto load_file = [&](std::string filename) -> std::string
         {
             if (filename.empty())
                 return "";
@@ -33,7 +33,7 @@ namespace render
                 // while (getline(inFile, line))
                 //     filetext.append(line + "\n");
                 inFile.close();
-                return filetext;
+                return filetext.insert(14, marco);
             }
         };
 
@@ -207,6 +207,29 @@ namespace render
             glProgramUniformMatrix4fv(program_id, uniformsLocations[uniform_name], 1, GL_FALSE, glm::value_ptr(matrix));
         }
     }
+
+    // auto Shader::createUniformBuffer(const std::string &uniform_name, const std::vector<glm::vec2>& buffer) -> GLuint
+    // {
+    //     auto bone_buffer_id = glGetUniformBlockIndex(program_id, "uniform_name");
+    //     if (bone_buffer_id != -1) {
+    //         GLint blockSize{};
+    //         glGetActiveUniformBlockiv(program_id, bone_buffer_id, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+    //         GLuint ubo{};
+    //         glGenBuffers(1, &ubo);
+    //         // glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    //         // glBufferData(GL_UNIFORM_BUFFER, blockSize, buffer.data(), GL_DYNAMIC_DRAW);
+    //         // glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+    //         return ubo;
+    //     }
+    // }
+
+    // auto Shader::setUniformBuffer(const std::string &uniform_name, const std::vector<glm::vec2>& buffer, GLuint ubo) -> void
+    // {
+    //     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    //     glBufferSubData(GL_UNIFORM_BUFFER, 0, buffer.size() * sizeof(glm::vec2), buffer.data());
+    //     glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+    // }
+
     auto Shader::getUniformLocation(const std::string &uniform_name) -> bool
     {
         GLint uniform_location = glGetUniformLocation(program_id, uniform_name.c_str());

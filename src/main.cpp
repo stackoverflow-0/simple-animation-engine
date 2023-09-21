@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <thread>
-
+#include <format>
 int main()
 {
     auto setup_status = render::setup_glfw3();
@@ -28,8 +28,10 @@ int main()
     render::Shader shader{
         {{GL_VERTEX_SHADER, "asset/shaders/Basic.vert"}, {GL_FRAGMENT_SHADER, "asset/shaders/Basic.frag"},}
     };
-
+    // "#define MAX_bone_id_and_weight_LEN " + std::format("{:d}\n", human_with_skeleton.uniform_mesh.bone_id_and_weight.size()
     assert(shader.compile() == true);
+    assert(shader.apply() == true);
+    shader.setUniform1i("bone_id_and_weight", 0);
     // shader.compile();
 
     auto cam_position = glm::vec3(0.0f, 1.0f, 1.2f);

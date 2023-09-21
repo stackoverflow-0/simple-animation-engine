@@ -17,7 +17,7 @@ void main()
 	
 	// vec3 finalColor = texture(tex_sampler, o_texcoord).xyz;
 	vec3 finalColor = vec3(0.5, 0.5, 0.5);
-	finalColor *= max(0.0f, dot(n, frag_pos));
+	finalColor *= max(0.0, dot(n, frag_pos));
 	
-	fragColor = vec4(weight, finalColor.yz, 1.0f);
+	fragColor = weight > 0 ? vec4(finalColor.xy, weight, 1.0) : vec4(weight , finalColor.yz, 1.0);
 }
