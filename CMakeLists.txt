@@ -46,6 +46,10 @@ message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 find_package(ASSIMP REQUIRED)
 message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
 
+# GLEW
+find_package(GLEW REQUIRED)
+message(STATUS "Found GLEW in ${GLEW_INCLUDE_DIR}")
+
 # STB_IMAGE
 add_library(STB_IMAGE "src/third-library/stb_image.cpp")
 
@@ -54,7 +58,7 @@ add_library(STB_IMAGE "src/third-library/stb_image.cpp")
 
 # Put all libraries into a variable
 # set(LIBS ${GLFW3_LIBRARY} ${OPENGL_LIBRARY} GLAD ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} STB_IMAGE)
-set(LIBS ${GLFW3_LIBRARY} ${OPENGL_LIBRARY} ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} STB_IMAGE)
+set(LIBS ${GLFW3_LIBRARY} ${OPENGL_LIBRARY} ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} ${GLEW_LIBRARY} STB_IMAGE)
 
 # Define the include DIRs
 include_directories(
