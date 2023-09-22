@@ -328,8 +328,9 @@ namespace assimp_model
                 bone_bind_pose.d3,
                 bone_bind_pose.d4,
             };
-            if (bones[bone_id].bind_pose_local == glm::mat4x4{})
+            if (bones[bone_id].bind_pose_local == glm::mat4x4{}) {
                 bones[bone_id].bind_pose_local = bone_bind_pose_mat;
+            }
             else if (bones[bone_id].bind_pose_local != bone_bind_pose_mat)
             {
                 // bones[bone_id].bind_pose_local = bone_bind_pose_mat;
@@ -348,22 +349,31 @@ namespace assimp_model
 
         for (auto i = 0; i < bone_num; i++)
         {
-            auto bone_bind_pose_world = bones[i].bind_pose_local;
+            glm::mat4x4 bone_bind_pose_world = bones[i].bind_pose_local;
+
             auto bone_it = bones[i].parent_id;
+
             while (bone_it != -1)
             {
-                if (bones[bone_it].bind_pose_world == glm::mat4x4{})
-                {
+                // if (bones[bone_it].bind_pose_world == glm::mat4x4{})
+                // {
+                // bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_local;
+                if (bones[bone_it].bind_pose_local != glm::mat4x4{})
                     bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_local;
-                }
-                else
-                {
-                    bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_world;
-                    break;
-                }
+                // }
+                // else
+                // {
+                //     bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_world;
+                //     break;
+                // }
                 bone_it = bones[bone_it].parent_id;
             }
+
+            // std::cout << bone_bind_pose_world[0][1] << std::endl;
             bones[i].bind_pose_world = bone_bind_pose_world;
+            for (int k = 0; k < 16; k++) {
+                std::cout << bone_bind_pose_world[k/4][k%4] << " ";
+            }std::cout << "\n";
         }
 
         auto i{0};
@@ -391,7 +401,9 @@ namespace assimp_model
         // tmp_bind_mat_array.resize(bones.size());
         for (auto &bone : bones)
         {
+            // std::cout << bone.bind_pose_world[0][0] << std::endl;
             tmp_bind_mat_array.emplace_back(bone.bind_pose_world);
+
         }
 
         glGenTextures(1, &bind_pose_texture);
@@ -405,10 +417,6 @@ namespace assimp_model
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glBindTexture(GL_TEXTURE_2D, 0);
-
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, bind_pose_texture);
-        // glActiveTexture(GL_TEXTURE0);
     }
 
     auto Model::create_track_anim_matrix_texure(int track_index) -> void
@@ -441,14 +449,6 @@ namespace assimp_model
         {
             for (auto cid = 0; cid < channels.size(); cid++)
             {
-                // if (i >= channels[cid].trans_matrix.size())
-                // {
-                //     tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[channels[cid].trans_matrix.size() - 1];
-                // }
-                // else
-                // {
-                //     tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[i];
-                // }
                 tmp_anim_pose_frames[i * channel_num + cid] = get_world_transform(cid, i);
             }
         }
