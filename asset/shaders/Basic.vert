@@ -62,8 +62,8 @@ void main()
         weight += abs(ca.x) ;
     }
 
-    // mat4 bone_trans_mat = current_mat * bind_mat;
-    mat4 bone_trans_mat =  bind_mat;
+    mat4 bone_trans_mat = current_mat * bind_mat;
+    // mat4 bone_trans_mat =  bind_mat;
 
     // weight = 1.0;
     // if (weight > 1.001)

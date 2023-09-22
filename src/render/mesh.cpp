@@ -423,18 +423,31 @@ namespace assimp_model
 
         tmp_anim_pose_frames.resize(channel_num * channel_frame_num);
 
+        auto get_world_transform = [&](int bone_id, int frame_id) -> glm::mat4x4 {
+            auto bone_it{bone_id};
+            glm::mat4x4 world_transform(1.0f);
+            while (bone_it != -1) {
+                auto frame_sz = channels[bone_it].trans_matrix.size();
+                auto r_frame_id = frame_id >= frame_sz ? frame_sz - 1 : frame_id;
+                world_transform = world_transform * channels[bone_it].trans_matrix[r_frame_id];
+                bone_it = bones[bone_it].parent_id;
+            }
+            return world_transform;
+        };
+
         for (auto i = 0; i < channel_frame_num; i++)
         {
             for (auto cid = 0; cid < channels.size(); cid++)
             {
-                if (i >= channels[cid].trans_matrix.size())
-                {
-                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[channels[cid].trans_matrix.size() - 1];
-                }
-                else
-                {
-                    tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[i];
-                }
+                // if (i >= channels[cid].trans_matrix.size())
+                // {
+                //     tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[channels[cid].trans_matrix.size() - 1];
+                // }
+                // else
+                // {
+                //     tmp_anim_pose_frames[i * channel_num + cid] = channels[cid].trans_matrix[i];
+                // }
+                tmp_anim_pose_frames[i * channel_num + cid] = get_world_transform(cid, i);
             }
         }
         glGenTextures(1, &track_anim_texture);
