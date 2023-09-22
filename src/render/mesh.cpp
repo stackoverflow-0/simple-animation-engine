@@ -339,7 +339,7 @@ namespace assimp_model
 
             for (auto j = 0; j < bone_drive_vert_num; j++)
             {
-                auto vert_id = bone->mWeights[j].mVertexId;
+               auto vert_id = bone->mWeights[j].mVertexId;
                 auto vert_weight = bone->mWeights[j].mWeight;
                 auto &b_and_w = driven_bone_and_weight[vert_id];
 
