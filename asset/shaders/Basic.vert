@@ -18,7 +18,7 @@ out vec3 o_normal;
 out vec2 o_texcoord;
 
 out float weight;
-	
+
 uniform mat4 world;
 uniform mat4 viewProj;
 // uniform mat3 normalMatrix;
@@ -39,7 +39,7 @@ void main()
     int bone_num = int(bone_weight_offset.y);
     mat4 bind_mat = mat4(1);
     mat4 current_mat = mat4(1);
-    weight = 0; 
+    weight = 0;
     for (int i = 0; i < bone_num; i++) {
         vec4 bw = texelFetch(bone_id_and_weight, ivec2((base_idx + i) / 2 % 1024, (base_idx + i) / 2 / 1024), 0);
         float bone_weight = (base_idx + i) % 2 == 0 ? bw.y : bw.w;
@@ -52,17 +52,17 @@ void main()
 
         bind_mat += bone_weight * transpose(mat4(ma, mb, mc, md));
 
-        vec4 ca = texelFetch(bone_current_pose, ivec2((bone_offset    ), 10), 0);
-        vec4 cb = texelFetch(bone_current_pose, ivec2((bone_offset + 1), 10), 0);
-        vec4 cc = texelFetch(bone_current_pose, ivec2((bone_offset + 2), 10), 0);
-        vec4 cd = texelFetch(bone_current_pose, ivec2((bone_offset + 3), 10), 0);
+        vec4 ca = texelFetch(bone_current_pose, ivec2((bone_offset    ), 1), 0);
+        vec4 cb = texelFetch(bone_current_pose, ivec2((bone_offset + 1), 1), 0);
+        vec4 cc = texelFetch(bone_current_pose, ivec2((bone_offset + 2), 1), 0);
+        vec4 cd = texelFetch(bone_current_pose, ivec2((bone_offset + 3), 1), 0);
 
         current_mat += bone_weight * transpose(mat4(ca, cb, cc, cd));
 
-        weight += abs(ca.x) ;
+        weight += abs(ca.y) ;
     }
 
-    mat4 bone_trans_mat = current_mat * bind_mat;
+    mat4 bone_trans_mat = bind_mat;
     // mat4 bone_trans_mat =  bind_mat;
 
     // weight = 1.0;
@@ -75,6 +75,6 @@ void main()
     o_position = vec3(world * vec4(position, 1.0));
     o_normal   = (inverse(transpose(world * bone_trans_mat)) * vec4(normal, 1.0)).xyz;
     o_texcoord = texcoord.xy;
-	
+
     gl_Position = viewProj * world * bone_trans_mat * vec4(position, 1.0);
 }

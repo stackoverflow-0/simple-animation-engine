@@ -127,6 +127,8 @@ namespace assimp_model
 
                     auto anim = scene->mAnimations[anim_id];
                     auto anim_channel_num = anim->mNumChannels;
+                    // assert(anim != nullptr);
+                    // aiAnimation anim_ins = *scene->mAnimations[anim_id];
                     std::cout << std::format("anim track name {:s}\n", anim->mName.C_Str());
 
                     track.track_name = std::string(anim->mName.C_Str());

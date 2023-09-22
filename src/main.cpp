@@ -33,7 +33,7 @@ int main()
     assert(shader.apply() == true);
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
-    shader.setUniform1i("bone_current_pose", 2);
+    shader.setUniform1i("bone_current_pose", 3);
     // shader.compile();
 
     auto cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
@@ -43,7 +43,7 @@ int main()
     auto world_matrix      = glm::mat4(1.0f);
     auto view_matrix       = glm::lookAt(cam_position, cam_look_at, cam_up);
     auto projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(1024), float(768), 0.1f, 10.0f);
-    
+
     auto time{0.0f};
     auto display = [&]()
     {
@@ -81,7 +81,7 @@ int main()
 
     // Event loop
     run();
-    
+
     // Cleanup
     glfwTerminate();
     return 0;
