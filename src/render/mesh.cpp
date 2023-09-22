@@ -115,7 +115,16 @@ namespace assimp_model
         {
             if (scene->HasAnimations())
             {
+                auto g_inverse_matrix = scene->mRootNode->mTransformation;
+                g_inverse_matrix = g_inverse_matrix.Inverse();
+                global_inverse_matrix = glm::mat4x4{
+                    g_inverse_matrix.a1, g_inverse_matrix.a2, g_inverse_matrix.a2, g_inverse_matrix.a2,
+                    g_inverse_matrix.b1, g_inverse_matrix.b2, g_inverse_matrix.b2, g_inverse_matrix.b2,
+                    g_inverse_matrix.c1, g_inverse_matrix.c2, g_inverse_matrix.c2, g_inverse_matrix.c2,
+                    g_inverse_matrix.d1, g_inverse_matrix.d2, g_inverse_matrix.d2, g_inverse_matrix.d2,
+                };
                 auto anim_num = scene->mNumAnimations;
+                
                 tracks.resize(anim_num);
 
                 std::cout << std::format("anim count {:d}\n", anim_num);
@@ -140,9 +149,7 @@ namespace assimp_model
                     {
                         auto channel_node = anim->mChannels[channel_id];
                         auto &channel = track.channels[channel_id];
-                        // if (bone_name_to_id.find(channel_node->mNodeName.C_Str()) == bone_name_to_id.end())
-                        //     bone_name_to_id.emplace(channel_node->mNodeName.C_Str(), bone_name_to_id.size());
-                        // std::cout << std::format("bone name to id : {:s}\n", channel_node->mNodeName.C_Str());
+        
 
                         channel.trans_matrix.resize(channel_node->mNumRotationKeys);
                         channel.times.resize(channel_node->mNumRotationKeys);
@@ -151,9 +158,9 @@ namespace assimp_model
                         {
                             auto& rot = channel_node->mRotationKeys[key_id].mValue;
                             auto& trans = channel_node->mPositionKeys[key_id].mValue;
-                            // channel.trans_matrix[key_id] = glm::translate(glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)), glm::vec3(trans.x, trans.y, trans.z));
-                            auto tmp = glm::translate(glm::mat4x4(1.0f), glm::vec3{1, 2, 3});
-                            channel.trans_matrix[key_id] = glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z));
+                            channel.trans_matrix[key_id] = glm::translate(glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)), glm::vec3(trans.x, trans.y, trans.z));
+                            // auto tmp = glm::translate(glm::mat4x4(1.0f), glm::vec3{1, 2, 3});
+                            // channel.trans_matrix[key_id] = glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z));
                             channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
                         }
                     }
@@ -203,14 +210,6 @@ namespace assimp_model
                         if (bone_name_to_id.find(child_name) != bone_name_to_id.end())
                             child_id.emplace_back(bone_name_to_id.at(child_name));
                     }
-                    // auto& trans_mat = bone_node->mTransformation;
-                    // glm::mat4x4 transformation{
-                    //     trans_mat.a1, trans_mat.a2, trans_mat.a3, trans_mat.a4,
-                    //     trans_mat.b1, trans_mat.b2, trans_mat.b3, trans_mat.b4,
-                    //     trans_mat.c1, trans_mat.c2, trans_mat.c3, trans_mat.c4,
-                    //     trans_mat.d1, trans_mat.d2, trans_mat.d3, trans_mat.d4,
-                    // };
-                    // if (bone_name_to_id.find(bone_name) != bone_name_to_id.end())
                     bones.resize(bone_name_to_id.size());
                     bones[bone_name_to_id.at(bone_name)] = {{}, {}, parent_id, bone_name, child_id};
                 }
@@ -281,7 +280,6 @@ namespace assimp_model
             else
                 vertex.texcoords = glm::vec2(0.0f, 0.0f);
 
-            // vertex.b_and_w = vertex_idx;
             vertex_idx++;
 
             vertices.push_back(vertex);
@@ -311,22 +309,10 @@ namespace assimp_model
 
             auto &bone_bind_pose = bone->mOffsetMatrix;
             auto bone_bind_pose_mat = glm::mat4x4{
-                bone_bind_pose.a1,
-                bone_bind_pose.a2,
-                bone_bind_pose.a3,
-                bone_bind_pose.a4,
-                bone_bind_pose.b1,
-                bone_bind_pose.b2,
-                bone_bind_pose.b3,
-                bone_bind_pose.b4,
-                bone_bind_pose.c1,
-                bone_bind_pose.c2,
-                bone_bind_pose.c3,
-                bone_bind_pose.c4,
-                bone_bind_pose.d1,
-                bone_bind_pose.d2,
-                bone_bind_pose.d3,
-                bone_bind_pose.d4,
+                bone_bind_pose.a1, bone_bind_pose.a2, bone_bind_pose.a3, bone_bind_pose.a4,
+                bone_bind_pose.b1, bone_bind_pose.b2, bone_bind_pose.b3, bone_bind_pose.b4,
+                bone_bind_pose.c1, bone_bind_pose.c2, bone_bind_pose.c3, bone_bind_pose.c4,
+                bone_bind_pose.d1, bone_bind_pose.d2, bone_bind_pose.d3, bone_bind_pose.d4,
             };
             if (bones[bone_id].bind_pose_local == glm::mat4x4{}) {
                 bones[bone_id].bind_pose_local = bone_bind_pose_mat;
@@ -347,34 +333,21 @@ namespace assimp_model
             }
         }
 
-        for (auto i = 0; i < bone_num; i++)
-        {
-            glm::mat4x4 bone_bind_pose_world = bones[i].bind_pose_local;
+        // for (auto i = 0; i < bone_num; i++)
+        // {
+        //     glm::mat4x4 bone_bind_pose_world = bones[i].bind_pose_local;
 
-            auto bone_it = bones[i].parent_id;
+        //     auto bone_it = bones[i].parent_id;
 
-            while (bone_it != -1)
-            {
-                // if (bones[bone_it].bind_pose_world == glm::mat4x4{})
-                // {
-                // bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_local;
-                if (bones[bone_it].bind_pose_local != glm::mat4x4{})
-                    bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_local;
-                // }
-                // else
-                // {
-                //     bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_world;
-                //     break;
-                // }
-                bone_it = bones[bone_it].parent_id;
-            }
+        //     while (bone_it != -1)
+        //     {
+        //         if (bones[bone_it].bind_pose_local != glm::mat4x4{})
+        //             bone_bind_pose_world = bone_bind_pose_world * bones[bone_it].bind_pose_local;
+        //         bone_it = bones[bone_it].parent_id;
+        //     }
+        //     bones[i].bind_pose_world = bone_bind_pose_world;
 
-            // std::cout << bone_bind_pose_world[0][1] << std::endl;
-            bones[i].bind_pose_world = bone_bind_pose_world;
-            for (int k = 0; k < 16; k++) {
-                std::cout << bone_bind_pose_world[k/4][k%4] << " ";
-            }std::cout << "\n";
-        }
+        // }
 
         auto i{0};
         auto base_offset{0};
@@ -402,7 +375,7 @@ namespace assimp_model
         for (auto &bone : bones)
         {
             // std::cout << bone.bind_pose_world[0][0] << std::endl;
-            tmp_bind_mat_array.emplace_back(bone.bind_pose_world);
+            tmp_bind_mat_array.emplace_back(bone.bind_pose_local);
 
         }
 
@@ -439,8 +412,9 @@ namespace assimp_model
             while (bone_it != -1) {
                 auto frame_sz = channels[bone_it].trans_matrix.size();
                 auto r_frame_id = frame_id >= frame_sz ? frame_sz - 1 : frame_id;
-                world_transform = world_transform * channels[bone_it].trans_matrix[r_frame_id];
+                world_transform = channels[bone_it].trans_matrix[r_frame_id] * world_transform;
                 bone_it = bones[bone_it].parent_id;
+                // break;
             }
             return world_transform;
         };
@@ -449,7 +423,7 @@ namespace assimp_model
         {
             for (auto cid = 0; cid < channels.size(); cid++)
             {
-                tmp_anim_pose_frames[i * channel_num + cid] = get_world_transform(cid, i);
+                tmp_anim_pose_frames[i * channel_num + cid] =  get_world_transform(cid, i);
             }
         }
         glGenTextures(1, &track_anim_texture);

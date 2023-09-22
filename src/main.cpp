@@ -17,7 +17,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/human-with-anim.fbx");
+    human_with_skeleton.load_model("asset/models/std-human.fbx");
 
     // auto human_with_skeleton_load_model = [&]() -> void {
     //     human_with_skeleton.load_model("asset/models/human-with-anim.fbx");
@@ -50,7 +50,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, time + glm::radians(0.0f), glm::vec3(0, 0, 1));
-        world_matrix = glm::scale(world_matrix, glm::vec3{0.005f});
+        world_matrix = glm::scale(world_matrix, glm::vec3{0.5f});
         assert(shader.apply() == true);
         time += 0.01f;
         // shader.setUniform1f("time", time);

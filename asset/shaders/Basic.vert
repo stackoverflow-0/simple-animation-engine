@@ -37,8 +37,8 @@ void main()
 {
     int base_idx = int(bone_weight_offset.x);
     int bone_num = int(bone_weight_offset.y);
-    mat4 bind_mat = mat4(1);
-    mat4 current_mat = mat4(1);
+    mat4 bind_mat = mat4(0);
+    mat4 current_mat = mat4(0);
     weight = 0;
     for (int i = 0; i < bone_num; i++) {
         vec4 bw = texelFetch(bone_id_and_weight, ivec2((base_idx + i) / 2 % 1024, (base_idx + i) / 2 / 1024), 0);
@@ -59,17 +59,17 @@ void main()
 
         current_mat += bone_weight * transpose(mat4(ca, cb, cc, cd));
 
-        weight += abs(ca.y) ;
+        weight += abs(bone_weight) ;
     }
     mat4 bone_trans_mat = mat4(1.0);
-    // bone_trans_mat = current_mat * bind_mat;
-    bone_trans_mat = bind_mat;
+    bone_trans_mat =  bind_mat;
+    bone_trans_mat = current_mat * bind_mat;
 
-    // weight = 1.0;
-    // if (weight > 1.001)
-    //     weight = -1.0;
-    // if (weight < 0.999)
-    //     weight = -1.0;
+    // weight = 0.5 *weight;
+    if (weight > 1.001)
+        weight = -1.0;
+    if (weight < 0.999)
+        weight = -1.0;
 
     // weight = bone_weight_offset.x + bone_weight_offset.y;
     o_position = vec3(world * vec4(position, 1.0));

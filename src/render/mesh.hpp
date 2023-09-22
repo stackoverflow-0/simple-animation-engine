@@ -64,7 +64,7 @@ namespace assimp_model
         std::vector<Vertex> vertices{};
         std::vector<unsigned int> indices{};
         std::vector<glm::vec2> bone_id_and_weight{};
-
+        
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
         {
             this->vertices = vertices;
@@ -94,6 +94,8 @@ namespace assimp_model
         std::unordered_map<std::string, unsigned int> bone_name_to_id{};
         std::vector<Track> tracks{};
         // std::vector<glm::mat4x4> bind_pose_local_with_skinning{};
+        glm::mat4x4 global_inverse_matrix{};
+
         std::string directory;
 
         auto draw()  -> void
