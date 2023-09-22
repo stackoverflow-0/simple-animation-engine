@@ -4,7 +4,8 @@ FIND_PATH( GLEW_INCLUDE_DIR GL/glew.h
 	/opt/local/include
 	"${CMAKE_SOURCE_DIR}/include"
 )
-FIND_LIBRARY( GLEW_LIBRARY glew32
+FIND_LIBRARY( GLEW_LIBRARY NAME glew32 GLEW
+	PATH
 	/usr/lib64
 	/usr/lib
 	/usr/local/lib
