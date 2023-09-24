@@ -15,16 +15,12 @@ namespace assimp_model
         int i{0};
         for (auto &v : append_vertices)
         {
-            // v.driven_bone_id = append_bone_weight[i].driven_bone_id;
-            // v.driven_bone_weight = append_bone_weight[i].driven_bone_weight;
-            // v.b_and_w = glm::vec4(0,0.9,0,0);
+
             append_driven_bone_offset[i].x += driven_bone_offset_offset;
             v.bone_weight_offset = append_driven_bone_offset[i];
             i++;
             vertices.emplace_back(v);
-            // auto sz = vertices.size();
-            // if (sz >= 2)
-            //     assert(vertices[sz-1].bone_weight_offset.x == vertices[sz-2].bone_weight_offset.x + vertices[sz-2].bone_weight_offset.y);
+        
         }
 
         for (auto &b_and_w : append_driven_bone_and_weight)
@@ -32,12 +28,8 @@ namespace assimp_model
             for (auto &bw : b_and_w)
             {
                 bone_id_and_weight.emplace_back(float(bw.driven_bone_id), bw.driven_bone_weight);
-                // bone_id_and_weight.emplace_back(float(bw.driven_bone_id), 1.0f);
             }
         }
-        // for (auto bw: append_bone_weight) {
-        //     driven_bone_and_weight.emplace_back(bw);
-        // }
         for (auto i : append_indices)
         {
             indices.emplace_back(indices_offset + i);
@@ -118,9 +110,6 @@ namespace assimp_model
 
             auto walk_bone_tree = [&]() -> void
             {
-                // bones.resize(bone_name_to_id.size());
-                // bind_pose_local_with_skinning.resize(bone_name_to_id.size());
-
                 std::queue<aiNode *> bone_to_be_walk({bone_root});
 
                 while (!bone_to_be_walk.empty())
@@ -166,14 +155,6 @@ namespace assimp_model
 
             if (scene->HasAnimations())
             {
-                // auto g_inverse_matrix = scene->mRootNode->mTransformation;
-                // g_inverse_matrix = g_inverse_matrix.Inverse();
-                // global_inverse_matrix = glm::mat4x4{
-                //     g_inverse_matrix.a1, g_inverse_matrix.b1, g_inverse_matrix.c1, g_inverse_matrix.d1,
-                //     g_inverse_matrix.a2, g_inverse_matrix.b2, g_inverse_matrix.c2, g_inverse_matrix.d2,
-                //     g_inverse_matrix.a3, g_inverse_matrix.b3, g_inverse_matrix.c3, g_inverse_matrix.d3,
-                //     g_inverse_matrix.a4, g_inverse_matrix.b4, g_inverse_matrix.c4, g_inverse_matrix.d4,
-                // };
                 auto anim_num = scene->mNumAnimations;
                 
                 tracks.resize(anim_num);

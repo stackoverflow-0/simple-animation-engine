@@ -8,6 +8,7 @@
 
 int main()
 {
+    std::cout << sizeof(glm::dualquat) / sizeof(float) << std::endl;
     auto setup_status = render::setup_glfw3();
     if (!setup_status) {
         return 1;
@@ -18,7 +19,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/human-with-anim-linux.fbx");
+    human_with_skeleton.load_model("asset/models/human-with-anim-good.fbx");
 
     // "asset/models/human-with-anim.fbx"
     // auto human_with_skeleton_load_model = [&]() -> void {
@@ -35,7 +36,7 @@ int main()
     assert(shader.apply() == true);
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
-    shader.setUniform1i("bone_current_pose", 3);
+    shader.setUniform1i("bone_current_pose", 4);
     // shader.compile();
 
     auto world_matrix      = glm::mat4(1.0f);
@@ -56,12 +57,12 @@ int main()
         assert(shader.apply() == true);
 
         time += 0.01f;
-        if (time > 0.1f) {
+        if (time > 0.05f) {
             frame_id++;
             time = 0.0f;
         }
         
-        if (frame_id >= 53) {
+        if (frame_id >= 56) {
             frame_id = 0;
         }
         
