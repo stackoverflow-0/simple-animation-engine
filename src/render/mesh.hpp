@@ -33,8 +33,8 @@ namespace assimp_model
 
     struct Bone final
     {
-        glm::mat4x4 bind_pose_local{};
-        glm::mat4x4 bind_pose_world{};
+        glm::mat4x4 bind_pose_offset_mat{};
+        // glm::mat4x4 bind_pose_world{};
         int parent_id{};
         std::string name{};
         std::vector<int> child_id{};

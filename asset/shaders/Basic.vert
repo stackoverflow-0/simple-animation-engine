@@ -33,6 +33,8 @@ uniform sampler2D bone_bind_pose;
 
 uniform sampler2D bone_current_pose;
 
+uniform int frame_id;
+
 void main()
 {
     int base_idx = int(bone_weight_offset.x);
@@ -52,27 +54,26 @@ void main()
 
         bind_mat += bone_weight * transpose(mat4(ma, mb, mc, md));
 
-        vec4 ca = texelFetch(bone_current_pose, ivec2((bone_offset    ), 1), 0);
-        vec4 cb = texelFetch(bone_current_pose, ivec2((bone_offset + 1), 1), 0);
-        vec4 cc = texelFetch(bone_current_pose, ivec2((bone_offset + 2), 1), 0);
-        vec4 cd = texelFetch(bone_current_pose, ivec2((bone_offset + 3), 1), 0);
+        vec4 ca = texelFetch(bone_current_pose, ivec2((bone_offset    ), frame_id), 0);
+        vec4 cb = texelFetch(bone_current_pose, ivec2((bone_offset + 1), frame_id), 0);
+        vec4 cc = texelFetch(bone_current_pose, ivec2((bone_offset + 2), frame_id), 0);
+        vec4 cd = texelFetch(bone_current_pose, ivec2((bone_offset + 3), frame_id), 0);
 
-        current_mat += bone_weight * transpose(mat4(ca, cb, cc, cd));
+        current_mat += bone_weight * mat4(ca, cb, cc, cd);
 
-        weight += abs(bone_weight) ;
+        weight += abs(bone_weight);
     }
     mat4 bone_trans_mat = mat4(1.0);
-    bone_trans_mat =  bind_mat;
+    // bone_trans_mat =  bind_mat;
     bone_trans_mat = current_mat * bind_mat;
 
-    // weight = 0.5 *weight;
-    if (weight > 1.001)
-        weight = -1.0;
-    if (weight < 0.999)
-        weight = -1.0;
+    // if (weight > 1.001)
+    //     weight = -1.0;
+    // if (weight < 0.999)
+    //     weight = -1.0;
 
     // weight = bone_weight_offset.x + bone_weight_offset.y;
-    o_position = vec3(world * vec4(position, 1.0));
+    o_position = vec3(world * bone_trans_mat * vec4(position, 1.0));
     o_normal   = (inverse(transpose(world * bone_trans_mat)) * vec4(normal, 1.0)).xyz;
     o_texcoord = texcoord.xy;
 

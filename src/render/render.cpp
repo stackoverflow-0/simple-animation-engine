@@ -246,7 +246,44 @@ namespace render
         }
     }
 
-    GLFWwindow* window::window{nullptr};
+   namespace window{ 
+    GLFWwindow* window{nullptr};
+
+    glm::vec3 cam_position = glm::vec3(0.0f, 0.0f, 5.0f);
+    glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    int SCR_WIDTH = 1024;
+    int SCR_HEIGHT = 768;
+
+    void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+    {
+        if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+            return;
+        }
+
+        float yaw = (xpos / float(SCR_WIDTH) - 0.5f) * 3.14;
+        float pitch = (0.5f - ypos / float(SCR_HEIGHT)) * 3.14;
+
+        // const float sensitivity = 0.1f;
+        // xoffset *= sensitivity;
+        // yoffset *= sensitivity;
+        // auto yaw = xoffset;
+        // auto pitch = yoffset;
+
+        // if (pitch > 89.0f)
+        //     pitch = 89.0f;
+        // if (pitch < -89.0f)
+        //     pitch = -89.0f;
+        glm::vec3 direction;
+        direction.x = sin(yaw) * cos(pitch);
+        direction.y = sin(pitch);
+        direction.z = -cos(yaw) * cos(pitch);
+        cam_position = -5.0f * glm::normalize(direction);
+
+        // glfwSetCursorPos(window, SCR_WIDTH / 2, SCR_HEIGHT / 2);
+        return;
+    }}
 
     auto setup_glfw3() -> bool
     {
@@ -256,6 +293,8 @@ namespace render
         glfwWindowHint(GLFW_CONTEXT_ROBUSTNESS, GLFW_LOSE_CONTEXT_ON_RESET);
         window::window = glfwCreateWindow(1024, 768, "GL test app", NULL, NULL);
         if (window::window != nullptr) {
+            
+            glfwSetCursorPosCallback(window::window, window::mouse_callback);
             glfwMakeContextCurrent(window::window);
             return true;
         } else {

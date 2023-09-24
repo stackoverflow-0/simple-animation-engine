@@ -47,6 +47,10 @@ namespace render
     namespace window {
         extern GLFWwindow *window;
 
+        extern glm::vec3 cam_position;
+        extern glm::vec3 cam_look_at;
+        extern glm::vec3 cam_up;
+
         static auto swapAndPollInput() -> int
         {
             glfwSwapBuffers(window);
