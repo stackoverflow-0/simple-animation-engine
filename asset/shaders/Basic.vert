@@ -35,6 +35,9 @@ uniform sampler2D bone_current_pose;
 
 uniform int frame_id;
 
+uniform float left_weight;
+uniform float right_weight;
+
 void main()
 {
     int base_idx = int(bone_weight_offset.x);
@@ -54,12 +57,17 @@ void main()
 
         bind_mat += bone_weight * transpose(mat4(ma, mb, mc, md));
 
-        vec4 ca = texelFetch(bone_current_pose, ivec2((bone_offset    ), frame_id), 0);
-        vec4 cb = texelFetch(bone_current_pose, ivec2((bone_offset + 1), frame_id), 0);
-        vec4 cc = texelFetch(bone_current_pose, ivec2((bone_offset + 2), frame_id), 0);
-        vec4 cd = texelFetch(bone_current_pose, ivec2((bone_offset + 3), frame_id), 0);
+        vec4 ca_l = texelFetch(bone_current_pose, ivec2((bone_offset    ), frame_id), 0);
+        vec4 cb_l = texelFetch(bone_current_pose, ivec2((bone_offset + 1), frame_id), 0);
+        vec4 cc_l = texelFetch(bone_current_pose, ivec2((bone_offset + 2), frame_id), 0);
+        vec4 cd_l = texelFetch(bone_current_pose, ivec2((bone_offset + 3), frame_id), 0);
 
-        current_mat += bone_weight * mat4(ca, cb, cc, cd);
+        vec4 ca_r = texelFetch(bone_current_pose, ivec2((bone_offset    ), frame_id + 1), 0);
+        vec4 cb_r = texelFetch(bone_current_pose, ivec2((bone_offset + 1), frame_id + 1), 0);
+        vec4 cc_r = texelFetch(bone_current_pose, ivec2((bone_offset + 2), frame_id + 1), 0);
+        vec4 cd_r = texelFetch(bone_current_pose, ivec2((bone_offset + 3), frame_id + 1), 0);
+
+        current_mat += bone_weight * (left_weight * mat4(ca_l, cb_l, cc_l, cd_l) + right_weight * mat4(ca_r, cb_r, cc_r, cd_r));
 
         weight += abs(bone_weight);
     }

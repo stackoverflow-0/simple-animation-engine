@@ -19,7 +19,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/std-human-adj-anim.fbx");
+    human_with_skeleton.load_model("asset/models/human-with-anim-good.fbx");
 
     // "asset/models/human-with-anim.fbx"
     // auto human_with_skeleton_load_model = [&]() -> void {
@@ -37,7 +37,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{5};
+    auto track_id{1};
 
     shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
@@ -49,6 +49,10 @@ int main()
     auto time{0.0f};
     auto last_clock = clock();
     auto frame_id{0};
+
+    auto weight_left_frame{1.0f};
+    auto weight_right_frame{0.0f};
+
     auto display = [&]()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -62,25 +66,35 @@ int main()
 
         time += float(clock() - last_clock) / float(CLOCKS_PER_SEC);
         last_clock = clock();
+
         auto& track = human_with_skeleton.tracks[track_id];
 
-        if (time > 1.0f / track.frame_per_second) {
-            frame_id++;
-            time = 0.0f;
-        }
-        
-        if (frame_id > track.duration) {
-            frame_id = 0;
-        }
-        
+        auto frame_time{1.0f / track.frame_per_second};
+
+        weight_right_frame = time / frame_time;
+        weight_left_frame = 1.0f - weight_right_frame;
+
         // shader.setUniform1f("time", time);
         shader.setUniformMatrix4fv("world", world_matrix);
         // shader.setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         shader.setUniform3fv("cam_pos", render::window::cam_position);
         shader.setUniform1i("frame_id", frame_id);
+        shader.setUniform1f("left_weight", weight_left_frame);
+        shader.setUniform1f("right_weight", weight_right_frame);
+    
         shader.apply();
         human_with_skeleton.draw();
+
+        if (time >= frame_time) {
+            frame_id++;
+            time = 0.0f;
+            last_clock = clock();
+        }
+        
+        if (frame_id > track.duration - 1) {
+            frame_id = 0;
+        }
     };
 
     auto run = [&]()
