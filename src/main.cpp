@@ -37,7 +37,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{1};
+    auto track_id{2};
 
     shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
@@ -60,7 +60,7 @@ int main()
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-0.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, glm::radians(0.0f), glm::vec3(0, 0, 1));
         world_matrix = glm::scale(world_matrix, glm::vec3{0.01f});
-        world_matrix = glm::translate(world_matrix, glm::vec3(0, 0, -10));
+        world_matrix = glm::translate(world_matrix, glm::vec3(0, 0, 0));
 
         assert(shader.apply() == true);
 
@@ -83,6 +83,16 @@ int main()
         shader.setUniform1f("left_weight", weight_left_frame);
         shader.setUniform1f("right_weight", weight_right_frame);
     
+        shader.apply();
+        human_with_skeleton.draw();
+
+        auto sub_world_matrix0 = glm::translate(world_matrix, glm::vec3(0, 0, 150));
+        shader.setUniformMatrix4fv("world", sub_world_matrix0);
+        shader.apply();
+        human_with_skeleton.draw();
+
+        auto sub_world_matrix1 = glm::translate(world_matrix, glm::vec3(0, 0, -150));
+        shader.setUniformMatrix4fv("world", sub_world_matrix1);
         shader.apply();
         human_with_skeleton.draw();
 

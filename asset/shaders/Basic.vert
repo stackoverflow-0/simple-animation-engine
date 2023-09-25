@@ -21,11 +21,8 @@ out float weight;
 
 uniform mat4 world;
 uniform mat4 viewProj;
-// uniform mat3 normalMatrix;
-uniform float time;
 
-// uniform sampler2D bone_and_weight;
-// uniform sampler2D bone_trans_matrix;
+uniform float time;
 
 uniform sampler2D bone_id_and_weight;
 
