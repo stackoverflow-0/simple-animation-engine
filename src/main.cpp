@@ -36,7 +36,10 @@ int main()
     assert(shader.apply() == true);
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
-    shader.setUniform1i("bone_current_pose", 4);
+
+    auto track_id{0};
+
+    shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
 
     auto world_matrix      = glm::mat4(1.0f);
@@ -44,6 +47,7 @@ int main()
     auto projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(1024), float(768), 0.1f, 10.0f);
 
     auto time{0.0f};
+    auto last_clock = clock();
     auto frame_id{0};
     auto display = [&]()
     {
@@ -56,13 +60,16 @@ int main()
 
         assert(shader.apply() == true);
 
-        time += 0.01f;
-        if (time > 0.05f) {
+        time += float(clock() - last_clock) / float(CLOCKS_PER_SEC);
+        auto& track = human_with_skeleton.tracks[track_id];
+
+        if (time > 1.0f / track.frame_per_second) {
             frame_id++;
             time = 0.0f;
+            last_clock = clock();
         }
         
-        if (frame_id >= 56) {
+        if (frame_id > track.duration) {
             frame_id = 0;
         }
         
