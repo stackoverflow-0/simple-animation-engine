@@ -8,7 +8,7 @@
 
 int main()
 {
-    std::cout << sizeof(glm::dualquat) / sizeof(float) << std::endl;
+    // std::cout << sizeof(glm::dualquat) / sizeof(float) << std::endl;
     auto setup_status = render::setup_glfw3();
     if (!setup_status) {
         return 1;
@@ -19,7 +19,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/human-with-anim-good.fbx");
+    human_with_skeleton.load_model("asset/models/std-human-adj-anim.fbx");
 
     // "asset/models/human-with-anim.fbx"
     // auto human_with_skeleton_load_model = [&]() -> void {
@@ -37,7 +37,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{0};
+    auto track_id{5};
 
     shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
@@ -61,12 +61,12 @@ int main()
         assert(shader.apply() == true);
 
         time += float(clock() - last_clock) / float(CLOCKS_PER_SEC);
+        last_clock = clock();
         auto& track = human_with_skeleton.tracks[track_id];
 
         if (time > 1.0f / track.frame_per_second) {
             frame_id++;
             time = 0.0f;
-            last_clock = clock();
         }
         
         if (frame_id > track.duration) {
