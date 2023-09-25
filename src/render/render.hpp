@@ -51,6 +51,9 @@ namespace render
         extern glm::vec3 cam_look_at;
         extern glm::vec3 cam_up;
 
+        extern int SCR_WIDTH;
+        extern int SCR_HEIGHT;
+
         static auto swapAndPollInput() -> int
         {
             glfwSwapBuffers(window);

@@ -246,7 +246,7 @@ namespace render
         }
     }
 
-   namespace window{ 
+namespace window{ 
     GLFWwindow* window{nullptr};
 
     glm::vec3 cam_position = glm::vec3(0.0f, 0.0f, 5.0f);
@@ -291,7 +291,7 @@ namespace render
         glfwSetErrorCallback(window::glfwErrorCallback);
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
         glfwWindowHint(GLFW_CONTEXT_ROBUSTNESS, GLFW_LOSE_CONTEXT_ON_RESET);
-        window::window = glfwCreateWindow(1024, 768, "GL test app", NULL, NULL);
+        window::window = glfwCreateWindow(1024, 768, "Skeleton Animation App", NULL, NULL);
         if (window::window != nullptr) {
             
             glfwSetCursorPosCallback(window::window, window::mouse_callback);

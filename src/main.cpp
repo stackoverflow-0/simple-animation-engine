@@ -19,7 +19,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/human-with-anim-good.fbx");
+    human_with_skeleton.load_model("asset/models/std-human-adj-anim.fbx");
 
     // "asset/models/human-with-anim.fbx"
     // auto human_with_skeleton_load_model = [&]() -> void {
@@ -37,7 +37,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{2};
+    auto track_id{5};
 
     shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
@@ -115,11 +115,11 @@ int main()
         glCullFace(GL_BACK);
         do
         {
-            int display_w, display_h;
+            // int display_w, display_h;
             // assert(render::window::window != nullptr);
-            glfwGetFramebufferSize(render::window::window, &display_w, &display_h);
-            projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(display_w), float(display_h), 0.1f, 10.0f);
-            glViewport(0, 0, display_w, display_h);
+            glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
+            projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(render::window::SCR_WIDTH), float(render::window::SCR_HEIGHT), 0.1f, 10.0f);
+            glViewport(0, 0, render::window::SCR_WIDTH, render::window::SCR_HEIGHT);
             display();
         } while (render::window::swapAndPollInput());
     };
