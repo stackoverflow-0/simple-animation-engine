@@ -19,14 +19,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/std-human-adj-anim.fbx");
-
-    // "asset/models/human-with-anim.fbx"
-    // auto human_with_skeleton_load_model = [&]() -> void {
-    //     human_with_skeleton.load_model("asset/models/human-with-anim.fbx");
-    // };
-
-    // auto human_with_skeleton_load_model_thd = std::thread(human_with_skeleton_load_model);
+    human_with_skeleton.load_model("asset/models/human-with-anim-good.fbx");
 
     render::Shader shader {
         {{GL_VERTEX_SHADER, "asset/shaders/Basic.vert"}, {GL_FRAGMENT_SHADER, "asset/shaders/Basic.frag"},}
@@ -37,7 +30,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{7};
+    auto track_id{2};
 
     shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
@@ -59,7 +52,7 @@ int main()
         auto view_matrix  = glm::lookAt(render::window::cam_position, render::window::cam_look_at, render::window::cam_up);
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-0.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, glm::radians(0.0f), glm::vec3(0, 0, 1));
-        world_matrix = glm::scale(world_matrix, glm::vec3{0.02f});
+        world_matrix = glm::scale(world_matrix, glm::vec3{0.01f});
         world_matrix = glm::translate(world_matrix, glm::vec3(0, 0, -8));
 
         assert(shader.apply() == true);
@@ -69,7 +62,7 @@ int main()
 
         auto& track = human_with_skeleton.tracks[track_id];
 
-        auto frame_time{10.0f / track.frame_per_second};
+        auto frame_time{1.0f / track.frame_per_second};
 
         weight_right_frame = time / frame_time;
         weight_left_frame = 1.0f - weight_right_frame;

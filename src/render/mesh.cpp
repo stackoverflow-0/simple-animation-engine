@@ -106,28 +106,32 @@ namespace assimp_model
             auto walk_bone_tree = [&]() -> void
             {
                 std::queue<aiNode *> bone_to_be_walk({bone_root});
-
+                auto find_skeleton_root{false};
+                auto is_skeleton_root{false};
                 while (!bone_to_be_walk.empty())
                 {
                     auto bone_node = bone_to_be_walk.front();
                     bone_to_be_walk.pop();
-
+                    
                     std::string bone_name = bone_node->mName.C_Str();
-                    if (bone_name_to_id.find(bone_name) == bone_name_to_id.end())
-                        bone_name_to_id.emplace(bone_name, bone_name_to_id.size());
-
-                    // std::cout << std::format("bone name : {:s}\n", bone_name);
                     std::string parent_name{};
                     int parent_id{-1};
                     std::vector<int> child_id{};
 
-                    if (bone_node->mParent != nullptr)
-                    {
+                    if (bone_name == "root") {
+                        find_skeleton_root = true;
+                        is_skeleton_root = true;
+                        while (!bone_to_be_walk.empty())
+                            bone_to_be_walk.pop();
+                    }
+                    
+                    if (find_skeleton_root) {
+                        bone_name_to_id.emplace(bone_name, bone_name_to_id.size());
+                        bones.emplace_back();
                         parent_name = bone_node->mParent->mName.C_Str();
-                        if (bone_name_to_id.find(parent_name) != bone_name_to_id.end())
-                        {
+                        if (! is_skeleton_root)
                             parent_id = bone_name_to_id.at(parent_name);
-                        }
+                        is_skeleton_root = false;
                     }
 
                     for (auto bone_child_i = 0; bone_child_i < bone_node->mNumChildren; bone_child_i++)
@@ -135,14 +139,15 @@ namespace assimp_model
                         bone_to_be_walk.push(bone_node->mChildren[bone_child_i]);
 
                         std::string child_name = bone_node->mChildren[bone_child_i]->mName.C_Str();
-
-                        bone_name_to_id.emplace(child_name, bone_name_to_id.size());
-
-                        if (bone_name_to_id.find(child_name) != bone_name_to_id.end())
+                        if (find_skeleton_root) {
+                            bone_name_to_id.emplace(child_name, bone_name_to_id.size());
+                            bones.emplace_back();
                             child_id.emplace_back(bone_name_to_id.at(child_name));
+                        }
                     }
-                    bones.resize(bone_name_to_id.size());
-                    bones[bone_name_to_id.at(bone_name)] = {{}, parent_id, bone_name, child_id};
+                    if (find_skeleton_root) {
+                        bones[bone_name_to_id.at(bone_name)] = {{}, parent_id, bone_name, child_id};
+                    }
                 }
             };
 
@@ -178,7 +183,10 @@ namespace assimp_model
                     for (auto i = 0; i < anim_channel_num; i++)
                     {
                         auto& channel_node = anim->mChannels[i];
-                        assert(bone_name_to_id.find(channel_node->mNodeName.C_Str()) != bone_name_to_id.end());
+                        if(bone_name_to_id.find(channel_node->mNodeName.C_Str()) == bone_name_to_id.end()) {
+                            std::cout << std::format("channel {:s} not in mapping\n", channel_node->mNodeName.C_Str());
+                            abort();
+                        }
                         auto& channel_id = bone_name_to_id.at(channel_node->mNodeName.C_Str());
                         auto& channel = track.channels[channel_id];
 
@@ -299,9 +307,6 @@ namespace assimp_model
         {
             auto &bone = mesh_bones[i];
             auto bone_id = bone_name_to_id.at(bone->mName.C_Str());
-            if (bone_id == bone_name_to_id.at("clavicle.r")) {
-                std::cout << "clavicle.r bone\n" << bone->mNumWeights << "\n";
-            }
             auto bone_drive_vert_num = bone->mNumWeights;
 
             auto &bone_bind_pose = bone->mOffsetMatrix;

@@ -42,6 +42,7 @@ void main()
     mat4 bind_mat = mat4(0);
     mat4 current_mat = mat4(0);
     weight = 0;
+    float total_weight = 0.0;
     for (int i = 0; i < bone_num; i++) {
         vec4 bw = texelFetch(bone_id_and_weight, ivec2((base_idx + i) / 2 % 1024, (base_idx + i) / 2 / 1024), 0);
         float bone_weight = (base_idx + i) % 2 == 0 ? bw.y : bw.w;
@@ -65,14 +66,19 @@ void main()
         vec4 cc_r = texelFetch(bone_current_pose, ivec2((bone_offset + 2), frame_id + 1), 0);
         vec4 cd_r = texelFetch(bone_current_pose, ivec2((bone_offset + 3), frame_id + 1), 0);
 
-        current_mat += bone_weight * (left_weight * mat4(ca_l, cb_l, cc_l, cd_l) + right_weight * mat4(ca_r, cb_r, cc_r, cd_r));
+        current_mat += bone_weight * (left_weight * mat4(ca_l, cb_l, cc_l, cd_l) + right_weight * mat4(ca_r, cb_r, cc_r, cd_r)) * transpose(mat4(ma, mb, mc, md));
         
+        total_weight += bone_weight;
+
         if (bone_id == 11)
             weight += bone_weight;
     }
+    bind_mat = bind_mat / total_weight;
+    current_mat = current_mat / total_weight;
+    
     mat4 bone_trans_mat = mat4(1.0);
     // bone_trans_mat =  bind_mat;
-    bone_trans_mat = current_mat * bind_mat;
+    bone_trans_mat = current_mat;
     // bone_trans_mat += inverse(bind_mat) * bind_mat;
 
     // if (weight > 1.001)
