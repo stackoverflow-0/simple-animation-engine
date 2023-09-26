@@ -50,6 +50,10 @@ message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")
 find_package(GLEW REQUIRED)
 message(STATUS "Found GLEW in ${GLEW_INCLUDE_DIR}")
 
+# Nlohmann
+find_package(NLOHMANN REQUIRED)
+message(STATUS "Found NLOHMANN in ${NLOHMANN_INCLUDE_DIR}")
+
 # STB_IMAGE
 add_library(STB_IMAGE "src/third-library/stb_image.cpp")
 
