@@ -99,14 +99,22 @@ namespace assimp_model
         // std::vector<glm::mat4x4> bind_pose_local_with_skinning{};
         glm::mat4x4 global_inverse_matrix{};
 
-        std::string directory;
+        std::string directory{};
+
+        std::string model_path{};
+
+        std::string skeleton_root{};
+
+        int play_anim_track{};
+
+        float speed{1.0};
 
         auto draw()  -> void
         {
             uniform_mesh.draw();
         }
 
-        auto load_model(std::string const path)  -> bool;
+        auto load_with_config(std::string const path)  -> bool;
 
         auto processNode(aiNode *node, const aiScene *scene) -> void;
 

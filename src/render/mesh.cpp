@@ -2,6 +2,9 @@
 #include <format>
 #include <queue>
 
+#include <nlohmann/json.hpp>
+#include <fstream>
+
 namespace assimp_model
 {
     constexpr int animation_texture_width = 1024;
@@ -84,11 +87,22 @@ namespace assimp_model
         // glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
     }
 
-    auto Model::load_model(std::string const path) -> bool
+    auto Model::load_with_config(std::string const path) -> bool
     {
+        std::ifstream config_fs(ROOT_DIR + path);
+        auto config = nlohmann::json::parse(config_fs);
+
+        model_path = config.find("model_path").value();
+
+        skeleton_root = config.find("skeleton_root").value();
+
+        play_anim_track = config.find("play_anim_track").value();
+
+        speed = config.find("speed").value();
+        
         // read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(ROOT_DIR + path, aiProcess_FlipUVs | aiProcess_SplitByBoneCount);
+        const aiScene *scene = importer.ReadFile(ROOT_DIR + model_path, aiProcess_FlipUVs | aiProcess_SplitByBoneCount);
         // check for errors
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -118,7 +132,7 @@ namespace assimp_model
                     int parent_id{-1};
                     std::vector<int> child_id{};
 
-                    if (bone_name == "root") {
+                    if (bone_name == skeleton_root) {
                         find_skeleton_root = true;
                         is_skeleton_root = true;
                         while (!bone_to_be_walk.empty())

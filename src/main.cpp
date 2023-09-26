@@ -6,6 +6,8 @@
 #include <thread>
 #include <format>
 
+
+
 int main()
 {
     // std::cout << sizeof(glm::dualquat) / sizeof(float) << std::endl;
@@ -19,7 +21,7 @@ int main()
 
     assimp_model::Model human_with_skeleton{};
 
-    human_with_skeleton.load_model("asset/models/human-with-anim-good.fbx");
+    human_with_skeleton.load_with_config("asset/config.json");
 
     render::Shader shader {
         {{GL_VERTEX_SHADER, "asset/shaders/Basic.vert"}, {GL_FRAGMENT_SHADER, "asset/shaders/Basic.frag"},}
@@ -30,9 +32,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{2};
-
-    shader.setUniform1i("bone_current_pose", 2 + track_id);
+    shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
     // shader.compile();
 
     auto world_matrix      = glm::mat4(1.0f);
@@ -60,9 +60,9 @@ int main()
         time += float(clock() - last_clock) / float(CLOCKS_PER_SEC);
         last_clock = clock();
 
-        auto& track = human_with_skeleton.tracks[track_id];
+        auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
 
-        auto frame_time{1.0f / track.frame_per_second};
+        auto frame_time{1.0f / human_with_skeleton.speed / track.frame_per_second};
 
         weight_right_frame = time / frame_time;
         weight_left_frame = 1.0f - weight_right_frame;
@@ -78,16 +78,6 @@ int main()
     
         shader.apply();
         human_with_skeleton.draw();
-
-        // auto sub_world_matrix0 = glm::translate(world_matrix, glm::vec3(0, 0, 150));
-        // shader.setUniformMatrix4fv("world", sub_world_matrix0);
-        // shader.apply();
-        // human_with_skeleton.draw();
-
-        // auto sub_world_matrix1 = glm::translate(world_matrix, glm::vec3(0, 0, -150));
-        // shader.setUniformMatrix4fv("world", sub_world_matrix1);
-        // shader.apply();
-        // human_with_skeleton.draw();
 
         if (time >= frame_time) {
             frame_id++;

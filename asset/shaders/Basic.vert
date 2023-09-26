@@ -73,6 +73,7 @@ void main()
         if (bone_id == 11)
             weight += bone_weight;
     }
+    
     bind_mat = bind_mat / total_weight;
     current_mat = current_mat / total_weight;
     
