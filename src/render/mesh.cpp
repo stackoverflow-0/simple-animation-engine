@@ -11,11 +11,10 @@ namespace assimp_model
         auto indices_offset = vertices.size();
         float driven_bone_offset_offset{0.0};
         if (!vertices.empty())
-            driven_bone_offset_offset = vertices.back().bone_weight_offset.x + vertices.back().bone_weight_offset.y;
+            driven_bone_offset_offset = bone_id_and_weight.size();
         int i{0};
         for (auto &v : append_vertices)
         {
-
             append_driven_bone_offset[i].x += driven_bone_offset_offset;
             v.bone_weight_offset = append_driven_bone_offset[i];
             i++;
@@ -69,9 +68,6 @@ namespace assimp_model
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, bone_weight_offset));
         glBindVertexArray(0);
 
-        // glEnableVertexAttribArray(4);
-        // glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, driven_bone_weight));
-        // GLuint blockIndex = glGetUniformBlockIndex(programHandle, "BlobSettings");
         glGenTextures(1, &bone_weight_texture);
 
         glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
@@ -93,7 +89,7 @@ namespace assimp_model
     {
         // read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(ROOT_DIR + path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        const aiScene *scene = importer.ReadFile(ROOT_DIR + path, aiProcess_FlipUVs | aiProcess_SplitByBoneCount);
         // check for errors
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -176,6 +172,9 @@ namespace assimp_model
                     track.duration = anim->mDuration;
                     track.frame_per_second = anim->mTicksPerSecond;
                     track.channels.resize(bone_name_to_id.size());
+                    assert(anim->mChannels[0]->mNumRotationKeys == anim->mChannels[0]->mNumPositionKeys);
+                    assert(anim->mChannels[0]->mNumRotationKeys == anim->mChannels[0]->mNumScalingKeys);
+
                     std::cout << std::format("anim frames {:d}\n", anim->mChannels[0]->mNumRotationKeys);
                     for (auto i = 0; i < anim_channel_num; i++)
                     {
@@ -184,9 +183,9 @@ namespace assimp_model
                         auto& channel_id = bone_name_to_id.at(channel_node->mNodeName.C_Str());
                         auto& channel = track.channels[channel_id];
 
-                        
-
-                        channel.trans_matrix.resize(channel_node->mNumRotationKeys, glm::identity<glm::mat4x4>());
+                        channel.rotations.resize(channel_node->mNumRotationKeys, glm::identity<glm::quat>());
+                        channel.positions.resize(channel_node->mNumRotationKeys, glm::vec3(0,0,0));
+                        channel.scales.resize(channel_node->mNumRotationKeys, glm::vec3(1.0f, 1.0f, 1.0f));
                         channel.times.resize(channel_node->mNumRotationKeys);
 
                         for (auto key_id = 0; key_id < channel_node->mNumRotationKeys; key_id++)
@@ -195,11 +194,15 @@ namespace assimp_model
                             auto& trans = channel_node->mPositionKeys[key_id].mValue;
                             auto& scale = channel_node->mScalingKeys[key_id].mValue;
                             // auto rot_mat = aiMatrix4x4(rot.GetMatrix());
+
+                            channel.positions[key_id] = glm::vec3(trans.x, trans.y, trans.z);
+                            channel.rotations[key_id] = glm::quat(rot.w, rot.x, rot.y, rot.z);
+                            channel.scales[key_id] = glm::vec3(scale.x, scale.y, scale.z);
                             
-                            channel.trans_matrix[key_id] = 
-                                glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(trans.x, trans.y, trans.z)) 
-                                * glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)) 
-                                * glm::scale(glm::identity<glm::mat4x4>(), glm::vec3(scale.x, scale.y, scale.z));
+                            // channel.trans_matrix[key_id] = 
+                            //     glm::translate(glm::mat4x4(1.0f), glm::vec3(trans.x, trans.y, trans.z)) 
+                            //     * glm::scale(glm::mat4x4(1.0f), glm::vec3(scale.x, scale.y, scale.z))
+                            //     * glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)) ;
 
                             channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
                         }
@@ -220,13 +223,14 @@ namespace assimp_model
     auto Model::processNode(aiNode *node, const aiScene *scene) -> void
     {
         // process each mesh located at the current node
+        // std::cout << std::format("mesh num : {:d}\n", node->mNumMeshes);
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             // the node object only contains indices to index the actual objects in the scene.
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
             processMesh(mesh, scene);
-            // break;
+            // return;
         }
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -273,7 +277,7 @@ namespace assimp_model
 
             vertex_idx++;
 
-            vertices.push_back(vertex);
+            vertices.emplace_back(vertex);
         }
         // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
@@ -316,11 +320,11 @@ namespace assimp_model
 
             for (auto j = 0; j < bone_drive_vert_num; j++)
             {
-               auto vert_id = bone->mWeights[j].mVertexId;
+                auto vert_id = bone->mWeights[j].mVertexId;
                 auto vert_weight = bone->mWeights[j].mWeight;
                 auto &b_and_w = driven_bone_and_weight[vert_id];
 
-                b_and_w.emplace_back(driven_bone{bone_id, vert_weight});
+                b_and_w.emplace_back(driven_bone{float(bone_id), vert_weight});
             }
         }
 
@@ -329,14 +333,6 @@ namespace assimp_model
         auto base_offset{0};
         for (auto &b_and_w : driven_bone_and_weight)
         {
-            auto weight_sum{0.0f};
-            for (auto &bw : b_and_w)
-            {
-                weight_sum += bw.driven_bone_weight;
-            }
-            if (std::fabs(weight_sum - 1.0f) > 0.01f) {
-                std::cout << "vert weight < 1.0f\n";
-            }
             driven_bone_offset[i] = glm::vec2{base_offset, b_and_w.size()};
             base_offset += b_and_w.size();
             i++;
@@ -377,8 +373,8 @@ namespace assimp_model
 
         auto channel_frame_num{0};
         for (auto& c: channels) {
-            if (c.trans_matrix.size() > channel_frame_num)
-                channel_frame_num = c.trans_matrix.size();
+            if (c.rotations.size() > channel_frame_num)
+                channel_frame_num = c.rotations.size();
         }
         auto channel_num = channels.size();
 
@@ -388,10 +384,14 @@ namespace assimp_model
 
         auto get_world_transform = [&](int bone_id, int frame_id) -> glm::mat4x4 {
             auto bone_it{bone_id};
-            glm::mat4x4 world_transform = glm::identity<glm::mat4x4>();
+            glm::quat world_rotation = glm::identity<glm::quat>();
+            glm::vec3 world_transform = glm::vec3();
+            glm::vec3 world_scale = glm::vec3(1.0f, 1.0f, 1.0f);
             while (bone_it != -1) {
 
-                auto frame_sz = channels[bone_it].trans_matrix.size();
+                auto& channel_it = channels[bone_it];
+
+                auto frame_sz = channel_it.rotations.size();
 
                 if (frame_sz == 0) {
                     bone_it = bones[bone_it].parent_id;
@@ -399,15 +399,26 @@ namespace assimp_model
                 }
 
                 auto r_frame_id = frame_id >= frame_sz ? frame_sz - 1 : frame_id;
+                // r_frame_id = frame_id;
+                // if (channel_it.rotations[r_frame_id] != glm::quat(0,0,0,0)) {
+                auto tmp_world_transform = channel_it.positions[r_frame_id] + channel_it.rotations[r_frame_id] * (channel_it.scales[r_frame_id] * world_transform);
+                auto tmp_world_scale = channel_it.scales[r_frame_id] * world_scale;
+                auto tmp_world_rotation = channel_it.rotations[r_frame_id] * world_rotation;
+                // }
+                world_transform = tmp_world_transform;
+                world_rotation = tmp_world_rotation;
+                world_scale = tmp_world_scale;
 
-                if (channels[bone_it].trans_matrix[r_frame_id] != glm::mat4x4(0)) {
-                    world_transform =  channels[bone_it].trans_matrix[r_frame_id] * world_transform;
-                }
+                // if (channels[bone_it].trans_matrix[r_frame_id] != glm::mat4x4(0)) {
+                //     world_transform =  channels[bone_it].trans_matrix[r_frame_id] * world_transform;
+                // }
 
                 bone_it = bones[bone_it].parent_id;
                 // break;
             }
-            return world_transform;
+            return glm::translate(glm::mat4x4(1.0f), world_transform)
+                    * glm::scale(glm::mat4x4(1.0f), world_scale)
+                    * glm::toMat4(world_rotation);
         };
 
         for (auto i = 0; i < channel_frame_num; i++)

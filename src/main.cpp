@@ -69,7 +69,7 @@ int main()
 
         auto& track = human_with_skeleton.tracks[track_id];
 
-        auto frame_time{1.0f / track.frame_per_second};
+        auto frame_time{10.0f / track.frame_per_second};
 
         weight_right_frame = time / frame_time;
         weight_left_frame = 1.0f - weight_right_frame;
@@ -86,15 +86,15 @@ int main()
         shader.apply();
         human_with_skeleton.draw();
 
-        auto sub_world_matrix0 = glm::translate(world_matrix, glm::vec3(0, 0, 150));
-        shader.setUniformMatrix4fv("world", sub_world_matrix0);
-        shader.apply();
-        human_with_skeleton.draw();
+        // auto sub_world_matrix0 = glm::translate(world_matrix, glm::vec3(0, 0, 150));
+        // shader.setUniformMatrix4fv("world", sub_world_matrix0);
+        // shader.apply();
+        // human_with_skeleton.draw();
 
-        auto sub_world_matrix1 = glm::translate(world_matrix, glm::vec3(0, 0, -150));
-        shader.setUniformMatrix4fv("world", sub_world_matrix1);
-        shader.apply();
-        human_with_skeleton.draw();
+        // auto sub_world_matrix1 = glm::translate(world_matrix, glm::vec3(0, 0, -150));
+        // shader.setUniformMatrix4fv("world", sub_world_matrix1);
+        // shader.apply();
+        // human_with_skeleton.draw();
 
         if (time >= frame_time) {
             frame_id++;

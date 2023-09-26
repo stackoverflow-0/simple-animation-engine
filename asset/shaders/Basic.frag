@@ -11,7 +11,7 @@ layout(binding = 0) uniform sampler2D tex_sampler;
 uniform vec3 cam_pos;
 
 void main()
-{   
+{
 	vec3 n = normalize(o_normal);
 	vec3 frag_pos = normalize(cam_pos - o_position);
 	
@@ -19,5 +19,5 @@ void main()
 	vec3 finalColor = vec3(0.5, 0.5, 0.5);
 	finalColor *= max(0.0, dot(n, frag_pos));
 	
-	fragColor = vec4(finalColor, 1.0);
+	fragColor = vec4(weight + finalColor.x, finalColor.yz, 1.0);
 }

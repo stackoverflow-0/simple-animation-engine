@@ -23,7 +23,7 @@ namespace assimp_model
 {
     struct driven_bone final
     {
-        unsigned int driven_bone_id{};
+        float driven_bone_id{};
         float driven_bone_weight{};
     };
     struct Vertex final
@@ -45,7 +45,9 @@ namespace assimp_model
 
     struct Channel final
     {
-        std::vector<glm::mat4x4> trans_matrix{};
+        std::vector<glm::quat> rotations{};
+        std::vector<glm::vec3> positions{};
+        std::vector<glm::vec3> scales{};
         std::vector<float> times{};
     };
 
