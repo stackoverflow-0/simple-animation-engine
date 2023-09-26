@@ -19,7 +19,6 @@ namespace assimp_model
             v.bone_weight_offset = append_driven_bone_offset[i];
             i++;
             vertices.emplace_back(v);
-        
         }
 
         for (auto &b_and_w : append_driven_bone_and_weight)
@@ -134,7 +133,7 @@ namespace assimp_model
                     for (auto bone_child_i = 0; bone_child_i < bone_node->mNumChildren; bone_child_i++)
                     {
                         bone_to_be_walk.push(bone_node->mChildren[bone_child_i]);
-                        // bone_name_to_id.at(bone_node->mChildren[bone_child_i]->mName.C_Str());
+
                         std::string child_name = bone_node->mChildren[bone_child_i]->mName.C_Str();
 
                         bone_name_to_id.emplace(child_name, bone_name_to_id.size());
@@ -300,6 +299,9 @@ namespace assimp_model
         {
             auto &bone = mesh_bones[i];
             auto bone_id = bone_name_to_id.at(bone->mName.C_Str());
+            if (bone_id == bone_name_to_id.at("clavicle.r")) {
+                std::cout << "clavicle.r bone\n" << bone->mNumWeights << "\n";
+            }
             auto bone_drive_vert_num = bone->mNumWeights;
 
             auto &bone_bind_pose = bone->mOffsetMatrix;

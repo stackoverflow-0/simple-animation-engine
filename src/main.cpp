@@ -37,7 +37,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    auto track_id{5};
+    auto track_id{7};
 
     shader.setUniform1i("bone_current_pose", 2 + track_id);
     // shader.compile();
@@ -59,8 +59,8 @@ int main()
         auto view_matrix  = glm::lookAt(render::window::cam_position, render::window::cam_look_at, render::window::cam_up);
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-0.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, glm::radians(0.0f), glm::vec3(0, 0, 1));
-        world_matrix = glm::scale(world_matrix, glm::vec3{0.01f});
-        world_matrix = glm::translate(world_matrix, glm::vec3(0, 0, 0));
+        world_matrix = glm::scale(world_matrix, glm::vec3{0.02f});
+        world_matrix = glm::translate(world_matrix, glm::vec3(0, 0, -8));
 
         assert(shader.apply() == true);
 

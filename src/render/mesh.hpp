@@ -74,8 +74,6 @@ namespace assimp_model
         {
             this->vertices = vertices;
             this->indices = indices;
-            // now that we have all the required data, set the vertex buffers and its attribute pointers.
-            // setup_mesh();
         }
 
         auto draw()  -> void

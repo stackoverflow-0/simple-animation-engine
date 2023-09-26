@@ -67,7 +67,7 @@ void main()
 
         current_mat += bone_weight * (left_weight * mat4(ca_l, cb_l, cc_l, cd_l) + right_weight * mat4(ca_r, cb_r, cc_r, cd_r));
         
-        if (bone_id == 3)
+        if (bone_id == 11)
             weight += bone_weight;
     }
     mat4 bone_trans_mat = mat4(1.0);
