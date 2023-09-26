@@ -99,6 +99,8 @@ namespace assimp_model
         play_anim_track = config.find("play_anim_track").value();
 
         speed = config.find("speed").value();
+
+        scale = config.find("scale").value();
         
         // read file via ASSIMP
         Assimp::Importer importer;

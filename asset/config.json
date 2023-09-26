@@ -1,6 +1,7 @@
 {
-    "model_path": "asset/models/human-with-anim-good.fbx",
-    "skeleton_root": "root",
+    "model_path": "asset/models/Spartan_Sketchfab.fbx",
+    "scale": 0.02,
+    "skeleton_root": "group",
     "play_anim_track": 0,
     "speed": 1.0
 }

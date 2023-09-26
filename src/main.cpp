@@ -52,8 +52,8 @@ int main()
         auto view_matrix  = glm::lookAt(render::window::cam_position, render::window::cam_look_at, render::window::cam_up);
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-0.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, glm::radians(0.0f), glm::vec3(0, 0, 1));
-        world_matrix = glm::scale(world_matrix, glm::vec3{0.01f});
-        world_matrix = glm::translate(world_matrix, glm::vec3(0, 0, -8));
+        world_matrix = glm::scale(world_matrix, glm::vec3(human_with_skeleton.scale));
+        world_matrix = glm::translate(world_matrix, glm::vec3(0, -40, -10));
 
         assert(shader.apply() == true);
 

@@ -109,6 +109,8 @@ namespace assimp_model
 
         float speed{1.0};
 
+        float scale{0.01};
+
         auto draw()  -> void
         {
             uniform_mesh.draw();
