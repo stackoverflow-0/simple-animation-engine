@@ -1,5 +1,5 @@
 {
-    "model_path": "asset/models/walk-cycle.fbx",
+    "model_path": "asset/models/human-with-anim-good.fbx",
     "skeleton_root": "Armature",
     "play_anim_track": 0,
     "speed": 1.0
