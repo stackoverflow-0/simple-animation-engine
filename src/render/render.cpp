@@ -1,5 +1,9 @@
 #include "render.hpp"
 #include "render/cmake-source-dir.hpp"
+
+
+// #include <imgui/imgui_impl_opengl3_loader.h>
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
@@ -296,9 +300,24 @@ namespace window{
             
             glfwSetCursorPosCallback(window::window, window::mouse_callback);
             glfwMakeContextCurrent(window::window);
+
+            if (glewInit() != GLEW_OK)
+                throw std::runtime_error("glewInit failed");
+
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            ImGuiIO &io = ImGui::GetIO();
+            // Setup Platform/Renderer bindings
+            assert(ImGui_ImplGlfw_InitForOpenGL(render::window::window, true));
+            assert(ImGui_ImplOpenGL3_Init("#version 430"));
+            // Setup Dear ImGui style
+            ImGui::StyleColorsDark();
             return true;
         } else {
             return false;
         }
+
+        
+        
     }
 } // namespace render

@@ -42,6 +42,10 @@ message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(GLFW3 REQUIRED)
 message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 
+# Imgui
+find_package(IMGUI REQUIRED)
+message(STATUS "Found IMGUI in ${IMGUI_INCLUDE_DIR}")
+
 # ASSIMP
 find_package(ASSIMP REQUIRED)
 message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIR}")

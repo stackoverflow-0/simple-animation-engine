@@ -6,8 +6,6 @@
 #include <thread>
 #include <format>
 
-
-
 int main()
 {
     // std::cout << sizeof(glm::dualquat) / sizeof(float) << std::endl;
@@ -15,9 +13,6 @@ int main()
     if (!setup_status) {
         return 1;
     }
-
-    if (glewInit() != GLEW_OK)
-        throw std::runtime_error("glewInit failed");
 
     assimp_model::Model human_with_skeleton{};
 
@@ -46,9 +41,10 @@ int main()
     auto weight_left_frame{1.0f};
     auto weight_right_frame{0.0f};
 
+    
+
     auto display = [&]()
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         auto view_matrix  = glm::lookAt(render::window::cam_position, render::window::cam_look_at, render::window::cam_up);
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-0.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, glm::radians(0.0f), glm::vec3(0, 0, 1));
@@ -98,12 +94,25 @@ int main()
         glCullFace(GL_BACK);
         do
         {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+            
+            ImGui::Begin("Demo window");
+            ImGui::Button("Hello!");
+            ImGui::End();
+            ImGui::Render();
             // int display_w, display_h;
             // assert(render::window::window != nullptr);
             glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
             projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(render::window::SCR_WIDTH), float(render::window::SCR_HEIGHT), 0.1f, 10.0f);
             glViewport(0, 0, render::window::SCR_WIDTH, render::window::SCR_HEIGHT);
             display();
+
+            
+
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         } while (render::window::swapAndPollInput());
     };
 
