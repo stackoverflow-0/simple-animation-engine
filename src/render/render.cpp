@@ -260,14 +260,25 @@ namespace window{
     int SCR_WIDTH = 1024;
     int SCR_HEIGHT = 768;
 
+    double xpos_old{};
+    double ypos_old{};
+
+    float yaw{};
+    float pitch{};
+
     void mouse_callback(GLFWwindow *window, double xpos, double ypos)
     {
-        if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS) {
+            xpos_old = xpos;
+            ypos_old = ypos;
             return;
         }
 
-        float yaw = (xpos / float(SCR_WIDTH) - 0.5f) * 3.14;
-        float pitch = (0.5f - ypos / float(SCR_HEIGHT)) * 3.14;
+        yaw   += (( xpos - xpos_old) / float(SCR_WIDTH)) * 3.14;
+        pitch += ((-ypos + ypos_old) / float(SCR_HEIGHT)) * 3.14;
+
+        xpos_old = xpos;
+        ypos_old = ypos;
 
         // const float sensitivity = 0.1f;
         // xoffset *= sensitivity;

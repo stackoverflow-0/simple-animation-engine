@@ -41,7 +41,7 @@ int main()
     auto weight_left_frame{1.0f};
     auto weight_right_frame{0.0f};
 
-    
+    auto speed{1.0f};
 
     auto display = [&]()
     {
@@ -52,13 +52,15 @@ int main()
         world_matrix = glm::translate(world_matrix, glm::vec3(0, -40, -10));
 
         assert(shader.apply() == true);
-
-        time += float(clock() - last_clock) / float(CLOCKS_PER_SEC);
+        if (human_with_skeleton.speed > 0.0f) {
+            time += float(clock() - last_clock) / float(CLOCKS_PER_SEC);
+            speed = human_with_skeleton.speed;
+        }
         last_clock = clock();
 
         auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
 
-        auto frame_time{1.0f / human_with_skeleton.speed / track.frame_per_second};
+        auto frame_time{1.0f / speed / track.frame_per_second};
 
         weight_right_frame = time / frame_time;
         weight_left_frame = 1.0f - weight_right_frame;
@@ -98,11 +100,23 @@ int main()
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
+            auto anim_tool_active{true};
+            ImGui::Begin("Animation Tools", &anim_tool_active, ImGuiWindowFlags_MenuBar);
+            if (ImGui::BeginMenuBar()) {
+                if (ImGui::BeginMenu("Options")) {
+                    if (ImGui::MenuItem("Open..", "Ctrl+O")) {
+                        // 
+                    }
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMainMenuBar();
+            }
+            ImGui::SliderFloat("float", &human_with_skeleton.speed, 0.0f, 2.0f);
+            ImGui::SliderFloat("scale", &human_with_skeleton.scale, 0.0f, 0.1f);
             
-            ImGui::Begin("Demo window");
-            ImGui::Button("Hello!");
             ImGui::End();
             ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             // int display_w, display_h;
             // assert(render::window::window != nullptr);
             glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
@@ -111,8 +125,6 @@ int main()
             display();
 
             
-
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         } while (render::window::swapAndPollInput());
     };
 
