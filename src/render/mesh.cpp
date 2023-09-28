@@ -189,6 +189,7 @@ namespace assimp_model
                     std::cout << std::format("anim track name {:s}\n", anim->mName.C_Str());
 
                     track.track_name = std::string(anim->mName.C_Str());
+                    track.track_name = track.track_name.substr(track.track_name.find_last_of('|') + 1);
                     track.duration = anim->mDuration;
                     track.frame_per_second = anim->mTicksPerSecond;
                     track.channels.resize(bone_name_to_id.size());

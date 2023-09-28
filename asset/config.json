@@ -1,7 +1,7 @@
 {
-    "model_path": "asset/models/std-human-adj-anim.fbx",
+    "model_path": "asset/models/human-with-anim-good.fbx",
     "scale": 0.02,
     "skeleton_root": "root",
-    "play_anim_track": 5,
+    "play_anim_track": 0,
     "speed": 1.0
 }

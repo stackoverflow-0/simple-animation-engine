@@ -27,7 +27,7 @@ int main()
     shader.setUniform1i("bone_id_and_weight", 0);
     shader.setUniform1i("bone_bind_pose", 1);
 
-    shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
+    
     // shader.compile();
 
     auto world_matrix      = glm::mat4(1.0f);
@@ -73,6 +73,11 @@ int main()
         shader.setUniform1i("frame_id", frame_id);
         shader.setUniform1f("left_weight", weight_left_frame);
         shader.setUniform1f("right_weight", weight_right_frame);
+        shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
+
+        if (frame_id > track.duration - 1) {
+            frame_id = 0;
+        }
     
         shader.apply();
         human_with_skeleton.draw();
@@ -83,9 +88,9 @@ int main()
             last_clock = clock();
         }
         
-        if (frame_id > track.duration - 1) {
-            frame_id = 0;
-        }
+        // if (frame_id > track.duration - 1) {
+        //     frame_id = 0;
+        // }
     };
 
     auto run = [&]()
@@ -102,17 +107,10 @@ int main()
             ImGui::NewFrame();
             auto anim_tool_active{true};
             ImGui::Begin("Animation Tools", &anim_tool_active, ImGuiWindowFlags_MenuBar);
-            if (ImGui::BeginMenuBar()) {
-                if (ImGui::BeginMenu("Options")) {
-                    if (ImGui::MenuItem("Open..", "Ctrl+O")) {
-                        // 
-                    }
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMainMenuBar();
-            }
-            ImGui::SliderFloat("float", &human_with_skeleton.speed, 0.0f, 2.0f);
+            ImGui::SliderFloat("speed", &human_with_skeleton.speed, 0.0f, 2.0f);
             ImGui::SliderFloat("scale", &human_with_skeleton.scale, 0.0f, 0.1f);
+            ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
+            ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
             
             ImGui::End();
             ImGui::Render();
