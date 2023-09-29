@@ -143,10 +143,14 @@ namespace assimp_model
                     
                     if (find_skeleton_root) {
                         bone_name_to_id.emplace(bone_name, bone_name_to_id.size());
-                        bones.emplace_back();
+                        
                         parent_name = bone_node->mParent->mName.C_Str();
-                        if (! is_skeleton_root)
+                        bones.emplace_back();
+                        if (! is_skeleton_root) {
+                            
                             parent_id = bone_name_to_id.at(parent_name);
+                        }
+                            
                         is_skeleton_root = false;
                     }
 
@@ -157,7 +161,7 @@ namespace assimp_model
                         std::string child_name = bone_node->mChildren[bone_child_i]->mName.C_Str();
                         if (find_skeleton_root) {
                             bone_name_to_id.emplace(child_name, bone_name_to_id.size());
-                            bones.emplace_back();
+                            // bones.emplace_back();
                             child_id.emplace_back(bone_name_to_id.at(child_name));
                         }
                     }

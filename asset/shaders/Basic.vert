@@ -35,6 +35,9 @@ uniform int frame_id;
 uniform float left_weight;
 uniform float right_weight;
 
+// uniform bool show_bone_weight;
+uniform int show_bone_weight_id;
+
 void main()
 {
     int base_idx = int(bone_weight_offset.x);
@@ -70,7 +73,7 @@ void main()
         
         total_weight += bone_weight;
 
-        if (bone_id == 11)
+        if (bone_id == show_bone_weight_id)
             weight += bone_weight;
     }
     

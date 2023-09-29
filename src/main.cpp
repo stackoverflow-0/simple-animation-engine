@@ -74,6 +74,7 @@ int main()
         shader.setUniform1f("left_weight", weight_left_frame);
         shader.setUniform1f("right_weight", weight_right_frame);
         shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
+        shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
         if (frame_id > track.duration - 1) {
             frame_id = 0;
@@ -111,6 +112,11 @@ int main()
             ImGui::SliderFloat("scale", &human_with_skeleton.scale, 0.0f, 0.1f);
             ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
             ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
+            if (human_with_skeleton.show_bone_weight_id >= 0)
+                ImGui::Text("%d - %s", human_with_skeleton.show_bone_weight_id, human_with_skeleton.bones[human_with_skeleton.show_bone_weight_id].name.c_str());
+            else
+                ImGui::Text("Disable bone weight visualize");
+            ImGui::SliderInt("bone", &human_with_skeleton.show_bone_weight_id, -1, human_with_skeleton.bones.size() - 1);
             
             ImGui::End();
             ImGui::Render();

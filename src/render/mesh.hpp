@@ -105,6 +105,10 @@ namespace assimp_model
 
         std::string skeleton_root{};
 
+        // bool show_bone_weight{false};
+
+        int show_bone_weight_id{-1};
+
         int play_anim_track{};
 
         float speed{1.0};
