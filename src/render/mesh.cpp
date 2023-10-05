@@ -37,7 +37,7 @@ namespace assimp_model
         }
     }
 
-    auto Mesh::setup_mesh() -> void
+    auto Mesh::setup_mesh(bool import_animation) -> void
     {
         // create buffers/arrays
         glGenVertexArrays(1, &vao);
@@ -69,19 +69,22 @@ namespace assimp_model
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, bone_weight_offset));
         glBindVertexArray(0);
+        
+        if (import_animation) {
+            glGenTextures(1, &bone_weight_texture);
 
-        glGenTextures(1, &bone_weight_texture);
+            glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
 
-        glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, animation_texture_width, bone_id_and_weight.size() / 2 / animation_texture_width + 1, 0, GL_RGBA, GL_FLOAT, bone_id_and_weight.data());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, animation_texture_width, bone_id_and_weight.size() / 2 / animation_texture_width + 1, 0, GL_RGBA, GL_FLOAT, bone_id_and_weight.data());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
 
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         // glActiveTexture(GL_TEXTURE0);
         // glBindTexture(GL_TEXTURE_2D, bone_weight_texture);
@@ -90,18 +93,23 @@ namespace assimp_model
     auto Model::load_with_config(std::string const path) -> bool
     {
         std::ifstream config_fs(ROOT_DIR + path);
+        std::cout << "load config " << path << std::endl;
         auto config = nlohmann::json::parse(config_fs);
+
+        import_animation = config.find("import_animation").value();
 
         model_path = config.find("model_path").value();
 
-        skeleton_root = config.find("skeleton_root").value();
-
-        play_anim_track = config.find("play_anim_track").value();
-
-        speed = config.find("speed").value();
-
         scale = config.find("scale").value();
-        
+
+        if (import_animation) {
+            skeleton_root = config.find("skeleton_root").value();
+
+            play_anim_track = config.find("play_anim_track").value();
+
+            speed = config.find("speed").value();
+        }
+
         // read file via ASSIMP
         Assimp::Importer importer;
         const aiScene *scene = importer.ReadFile(ROOT_DIR + model_path, aiProcess_FlipUVs | aiProcess_SplitByBoneCount);
@@ -239,7 +247,8 @@ namespace assimp_model
             }
         };
 
-        processSkeleton();
+        if (import_animation)
+            processSkeleton();
 
         // process ASSIMP's root node recursively
         processNode(scene->mRootNode, scene);
@@ -321,41 +330,42 @@ namespace assimp_model
         driven_bone_and_weight.resize(vertices.size());
         driven_bone_offset.resize(vertices.size());
 
-        auto &mesh_bones = mesh->mBones;
-        auto bone_num = mesh->mNumBones;
+        if (import_animation) {
+            auto &mesh_bones = mesh->mBones;
+            auto bone_num = mesh->mNumBones;
 
-        for (auto i = 0; i < bone_num; i++)
-        {
-            auto &bone = mesh_bones[i];
-            auto bone_id = bone_name_to_id.at(bone->mName.C_Str());
-            auto bone_drive_vert_num = bone->mNumWeights;
-
-            auto &bone_bind_pose = bone->mOffsetMatrix;
-            auto bone_bind_pose_mat = glm::mat4x4{
-                bone_bind_pose.a1, bone_bind_pose.a2, bone_bind_pose.a3, bone_bind_pose.a4,
-                bone_bind_pose.b1, bone_bind_pose.b2, bone_bind_pose.b3, bone_bind_pose.b4,
-                bone_bind_pose.c1, bone_bind_pose.c2, bone_bind_pose.c3, bone_bind_pose.c4,
-                bone_bind_pose.d1, bone_bind_pose.d2, bone_bind_pose.d3, bone_bind_pose.d4,
-            };
-            if (bones[bone_id].bind_pose_offset_mat == glm::mat4x4{}) {
-                bones[bone_id].bind_pose_offset_mat = bone_bind_pose_mat;
-            }
-            else if (bones[bone_id].bind_pose_offset_mat != bone_bind_pose_mat)
+            for (auto i = 0; i < bone_num; i++)
             {
-                // bones[bone_id].bind_pose_local = bone_bind_pose_mat;
-                std::cout << "error: bind pose conflict\n";
-            }
+                auto &bone = mesh_bones[i];
+                auto bone_id = bone_name_to_id.at(bone->mName.C_Str());
+                auto bone_drive_vert_num = bone->mNumWeights;
 
-            for (auto j = 0; j < bone_drive_vert_num; j++)
-            {
-                auto vert_id = bone->mWeights[j].mVertexId;
-                auto vert_weight = bone->mWeights[j].mWeight;
-                auto &b_and_w = driven_bone_and_weight[vert_id];
+                auto &bone_bind_pose = bone->mOffsetMatrix;
+                auto bone_bind_pose_mat = glm::mat4x4{
+                    bone_bind_pose.a1, bone_bind_pose.a2, bone_bind_pose.a3, bone_bind_pose.a4,
+                    bone_bind_pose.b1, bone_bind_pose.b2, bone_bind_pose.b3, bone_bind_pose.b4,
+                    bone_bind_pose.c1, bone_bind_pose.c2, bone_bind_pose.c3, bone_bind_pose.c4,
+                    bone_bind_pose.d1, bone_bind_pose.d2, bone_bind_pose.d3, bone_bind_pose.d4,
+                };
+                if (bones[bone_id].bind_pose_offset_mat == glm::mat4x4{}) {
+                    bones[bone_id].bind_pose_offset_mat = bone_bind_pose_mat;
+                }
+                else if (bones[bone_id].bind_pose_offset_mat != bone_bind_pose_mat)
+                {
+                    // bones[bone_id].bind_pose_local = bone_bind_pose_mat;
+                    std::cout << "error: bind pose conflict\n";
+                }
 
-                b_and_w.emplace_back(driven_bone{float(bone_id), vert_weight});
+                for (auto j = 0; j < bone_drive_vert_num; j++)
+                {
+                    auto vert_id = bone->mWeights[j].mVertexId;
+                    auto vert_weight = bone->mWeights[j].mWeight;
+                    auto &b_and_w = driven_bone_and_weight[vert_id];
+
+                    b_and_w.emplace_back(driven_bone{float(bone_id), vert_weight});
+                }
             }
         }
-
 
         auto i{0};
         auto base_offset{0};

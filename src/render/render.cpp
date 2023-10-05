@@ -86,6 +86,18 @@ namespace render
         return true;
     }
 
+    auto Shader::setUniform1b(const std::string &uniform_name, bool value) -> void
+    {
+        if (uniformsLocations.count(uniform_name))
+        {
+            glProgramUniform1i(program_id, uniformsLocations[uniform_name], value ? 1 : 0);
+        }
+        else if (getUniformLocation(uniform_name))
+        {
+            glProgramUniform1i(program_id, uniformsLocations[uniform_name], value ? 1 : 0);
+        }
+    }
+
     auto Shader::setUniform1f(const std::string &uniform_name, float value) -> void
     {
         if (uniformsLocations.count(uniform_name))
@@ -280,22 +292,15 @@ namespace window{
         xpos_old = xpos;
         ypos_old = ypos;
 
-        // const float sensitivity = 0.1f;
-        // xoffset *= sensitivity;
-        // yoffset *= sensitivity;
-        // auto yaw = xoffset;
-        // auto pitch = yoffset;
-
-        // if (pitch > 89.0f)
-        //     pitch = 89.0f;
-        // if (pitch < -89.0f)
-        //     pitch = -89.0f;
         glm::vec3 direction;
         direction.x = sin(yaw) * cos(pitch);
         direction.y = sin(pitch);
         direction.z = -cos(yaw) * cos(pitch);
         cam_position = -5.0f * glm::normalize(direction);
 
+        auto _cam_position = -5.0f * glm::normalize(glm::vec3{sin(yaw) * cos(pitch - 0.1f), sin(pitch - 0.1f), -cos(yaw) * cos(pitch - 0.1f)});
+
+        cam_up = glm::normalize(_cam_position - cam_position);
         // glfwSetCursorPos(window, SCR_WIDTH / 2, SCR_HEIGHT / 2);
         return;
     }}

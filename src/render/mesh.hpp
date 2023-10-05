@@ -86,7 +86,7 @@ namespace assimp_model
 
         auto append_mesh(std::vector<Vertex>& append_vertices, std::vector<unsigned int>& append_indices, std::vector<glm::vec2>& append_driven_bone_offset, std::vector<std::vector<driven_bone>>& append_driven_bone_and_weight)  -> void;
 
-        auto setup_mesh()  -> void;
+        auto setup_mesh(bool import_animation)  -> void;
     };
 
     struct Model final
@@ -107,13 +107,15 @@ namespace assimp_model
 
         // bool show_bone_weight{false};
 
+        bool import_animation{false};
+
         int show_bone_weight_id{-1};
 
         int play_anim_track{};
 
         float speed{1.0};
 
-        float scale{0.01};
+        float scale{1.0f};
 
         auto draw()  -> void
         {
@@ -134,12 +136,15 @@ namespace assimp_model
 
         auto setup_model() -> void
         {
-            uniform_mesh.setup_mesh();
-            create_bind_pose_matrix_texure();
-            for (int track_id = 0; track_id < tracks.size(); track_id++) {
-                create_track_anim_matrix_texure(track_id);
+            uniform_mesh.setup_mesh(import_animation);
+            if (import_animation) {
+                create_bind_pose_matrix_texure();
+                for (int track_id = 0; track_id < tracks.size(); track_id++) {
+                    create_track_anim_matrix_texure(track_id);
+                }
+                bind_textures();
             }
-            bind_textures();
+            
         }
     };
 } // namespace mesh

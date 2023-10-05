@@ -32,6 +32,7 @@ namespace render
             }
         }
 
+        auto setUniform1b(const std::string &uniform_name, bool value) -> void;
         auto setUniform1f(const std::string &uniform_name, float value) -> void;
         auto setUniform1i(const std::string &uniform_name, int value) -> void;
         auto setUniform1ui(const std::string &uniform_name, unsigned int value) -> void;
