@@ -8,6 +8,7 @@ layout(location = 3) in vec2 bone_weight_offset;
 out vec3 o_position;
 out vec3 o_normal;
 out vec2 o_texcoord;
+out vec4 o_color;
 
 uniform mat4 world;
 uniform mat4 viewProj;
@@ -23,6 +24,8 @@ uniform float right_weight;
 uniform int bone_id;
 
 uniform float gizmo_scale;
+uniform vec4 gizmo_color;
+uniform int show_bone_weight_id;
 
 void main()
 {
@@ -49,6 +52,7 @@ void main()
     o_position = vec3(world * bone_trans_mat * vec4(position, 1.0));
     o_normal   = (inverse(transpose(world * bone_trans_mat)) * vec4(normal, 1.0)).xyz;
     o_texcoord = texcoord.xy;
+    o_color = show_bone_weight_id == bone_id ? vec4(1.0, 0.0, 1.0, 1.0) : gizmo_color;
 
     gl_Position =  viewProj * world * bone_trans_mat * vec4(gizmo_scale * position, 1.0);
 }

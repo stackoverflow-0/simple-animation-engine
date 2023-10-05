@@ -3,10 +3,9 @@
 in vec3 o_position;
 in vec3 o_normal;
 in vec2 o_texcoord;
+in vec4 o_color;
 
 layout(location = 0) out vec4 fragColor;
-
-uniform vec4 gizmo_color;
 
 void main()
 {
@@ -17,5 +16,5 @@ void main()
 	// vec3 finalColor = vec3(0.5, 0.5, 0.5);
 	// finalColor *= max(0.0, dot(n, frag_pos));
 	
-	fragColor = gizmo_color;
+	fragColor = o_color;
 }

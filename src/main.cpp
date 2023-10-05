@@ -66,8 +66,8 @@ int main()
         world_matrix = glm::translate(world_matrix, glm::vec3(0, -0.4, -0.1));
         world_matrix = glm::scale(world_matrix, glm::vec3(human_with_skeleton.scale));
 
-        auto gizmo_world_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, -0.4, -0.1));
-        gizmo_world_matrix = glm::scale(gizmo_world_matrix, glm::vec3(human_with_skeleton.scale));
+        // auto gizmo_world_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, -0.4, -0.1));
+        // gizmo_world_matrix = glm::scale(gizmo_world_matrix, glm::vec3(human_with_skeleton.scale));
 
         shader.apply();
         shader.setUniformMatrix4fv("world", world_matrix);
@@ -75,7 +75,7 @@ int main()
         shader.setUniform3fv("cam_pos", render::window::cam_position);
 
         gizmo_shader.apply();
-        gizmo_shader.setUniformMatrix4fv("world", gizmo_world_matrix);
+        gizmo_shader.setUniformMatrix4fv("world", world_matrix);
         gizmo_shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         // gizmo_shader.setUniform3fv("cam_pos", render::window::cam_position);
 
@@ -113,6 +113,7 @@ int main()
         gizmo_shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
         gizmo_shader.setUniform4fv("gizmo_color", bone_gizmo_color);
         gizmo_shader.setUniform1f("gizmo_scale", gizmo_model.scale);
+        
 
         if (frame_id > track.duration - 1) {
             frame_id = 0;
@@ -120,6 +121,7 @@ int main()
     
         shader.apply();
         human_with_skeleton.draw();
+
         if (show_bone_gizmo) {
             glDisable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -127,6 +129,7 @@ int main()
             gizmo_shader.apply();
             for (auto bone_gz_id = 0; bone_gz_id < human_with_skeleton.bones.size(); bone_gz_id++) {
                 gizmo_shader.setUniform1i("bone_id", bone_gz_id);
+                gizmo_shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
                 gizmo_model.draw();
             }
             glDisable(GL_BLEND);
