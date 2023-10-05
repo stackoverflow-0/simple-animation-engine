@@ -12,7 +12,7 @@ out vec2 o_texcoord;
 uniform mat4 world;
 uniform mat4 viewProj;
 
-uniform sampler2D bone_bind_pose;
+// uniform sampler2D bone_bind_pose;
 
 uniform sampler2D bone_current_pose;
 uniform int frame_id;
@@ -22,14 +22,16 @@ uniform float right_weight;
 
 uniform int bone_id;
 
+uniform float gizmo_scale;
+
 void main()
 {
     int bone_offset = bone_id * 4;
 
-    vec4 ma = texelFetch(bone_bind_pose, ivec2((bone_offset    ) % 1024, (bone_offset    ) / 1024), 0);
-    vec4 mb = texelFetch(bone_bind_pose, ivec2((bone_offset + 1) % 1024, (bone_offset + 1) / 1024), 0);
-    vec4 mc = texelFetch(bone_bind_pose, ivec2((bone_offset + 2) % 1024, (bone_offset + 2) / 1024), 0);
-    vec4 md = texelFetch(bone_bind_pose, ivec2((bone_offset + 3) % 1024, (bone_offset + 3) / 1024), 0);
+    // vec4 ma = texelFetch(bone_bind_pose, ivec2((bone_offset    ) % 1024, (bone_offset    ) / 1024), 0);
+    // vec4 mb = texelFetch(bone_bind_pose, ivec2((bone_offset + 1) % 1024, (bone_offset + 1) / 1024), 0);
+    // vec4 mc = texelFetch(bone_bind_pose, ivec2((bone_offset + 2) % 1024, (bone_offset + 2) / 1024), 0);
+    // vec4 md = texelFetch(bone_bind_pose, ivec2((bone_offset + 3) % 1024, (bone_offset + 3) / 1024), 0);
     //  left frame
     vec4 ca_l = texelFetch(bone_current_pose, ivec2((bone_offset    ), frame_id), 0);
     vec4 cb_l = texelFetch(bone_current_pose, ivec2((bone_offset + 1), frame_id), 0);
@@ -48,5 +50,5 @@ void main()
     o_normal   = (inverse(transpose(world * bone_trans_mat)) * vec4(normal, 1.0)).xyz;
     o_texcoord = texcoord.xy;
 
-    gl_Position =  viewProj * world * bone_trans_mat * vec4(5.0 * position, 1.0);
+    gl_Position =  viewProj * world * bone_trans_mat * vec4(gizmo_scale * position, 1.0);
 }

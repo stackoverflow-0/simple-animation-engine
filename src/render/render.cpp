@@ -319,15 +319,58 @@ namespace window{
 
             if (glewInit() != GLEW_OK)
                 throw std::runtime_error("glewInit failed");
+            // imgl3wInit();
 
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
             ImGuiIO &io = ImGui::GetIO();
             // Setup Platform/Renderer bindings
-            assert(ImGui_ImplGlfw_InitForOpenGL(render::window::window, true));
-            assert(ImGui_ImplOpenGL3_Init("#version 430"));
+            // assert(ImGui_ImplGlfw_InitForOpenGL(render::window::window, true));
+            if(ImGui_ImplGlfw_InitForOpenGL(render::window::window, true) != true) {
+                std::cout << "init glfw imgui failed\n";
+                // return false;
+            }
+            // assert(ImGui_ImplOpenGL3_Init("#version 430"));
+
+            if(ImGui_ImplOpenGL3_Init("#version 430") != true) {
+                // fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+                std::cout << "init opengl3 imgui failed\n";
+                // return false;
+            }
             // Setup Dear ImGui style
             ImGui::StyleColorsDark();
+            // return false;
+
+            // IMGUI_CHECKVERSION();
+            // ImGui::CreateContext();
+            // ImGuiIO& io = ImGui::GetIO(); (void)io;
+            // ImGui::StyleColorsDark();
+            // ImGui_ImplGlfw_InitForOpenGL(window::window, true);
+            // ImGui_ImplOpenGL3_Init("#version 150");
+
+            // while (!glfwWindowShouldClose(window::window))
+            // {
+            //     glClear(GL_COLOR_BUFFER_BIT);
+
+            //     ImGui_ImplOpenGL3_NewFrame();
+            //     ImGui_ImplGlfw_NewFrame();
+            //     ImGui::NewFrame();
+
+            //     ImGui::ShowDemoWindow();
+
+            //     ImGui::Render();
+            //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            //     glfwSwapBuffers(window::window);
+            //     glfwPollEvents();
+            // }
+
+            // ImGui_ImplOpenGL3_Shutdown();
+            // ImGui_ImplGlfw_Shutdown();
+            // ImGui::DestroyContext();
+
+            // glfwDestroyWindow(window::window);
+            // glfwTerminate();
             return true;
         } else {
             return false;
