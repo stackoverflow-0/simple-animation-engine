@@ -330,9 +330,9 @@ namespace window{
                 std::cout << "init glfw imgui failed\n";
                 // return false;
             }
-            // assert(ImGui_ImplOpenGL3_Init("#version 430"));
+            // assert(ImGui_ImplOpenGL3_Init("#version 420"));
 
-            if(ImGui_ImplOpenGL3_Init("#version 430") != true) {
+            if(ImGui_ImplOpenGL3_Init("#version 420") != true) {
                 // fprintf(stderr, "Failed to initialize OpenGL loader!\n");
                 std::cout << "init opengl3 imgui failed\n";
                 // return false;

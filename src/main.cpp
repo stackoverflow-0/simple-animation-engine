@@ -77,7 +77,6 @@ int main()
         gizmo_shader.apply();
         gizmo_shader.setUniformMatrix4fv("world", world_matrix);
         gizmo_shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
-        // gizmo_shader.setUniform3fv("cam_pos", render::window::cam_position);
 
         if (! human_with_skeleton.import_animation) {
             shader.apply();

@@ -261,20 +261,22 @@ namespace assimp_model
     {
         // process each mesh located at the current node
         // std::cout << std::format("mesh num : {:d}\n", node->mNumMeshes);
-        for (unsigned int i = 0; i < node->mNumMeshes; i++)
+        for (unsigned int i = 0; i < scene->mNumMeshes; i++)
         {
             // the node object only contains indices to index the actual objects in the scene.
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-            aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+            // std::cout << (scene->mNumMeshes);
+            aiMesh *mesh = scene->mMeshes[i];
             processMesh(mesh, scene);
             // return;
         }
+        // return;
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            processNode(node->mChildren[i], scene);
-            // break;
-        }
+        // for (unsigned int i = 0; i < node->mNumChildren; i++)
+        // {
+        //     processNode(node->mChildren[i], scene);
+        //     // break;
+        // }
     }
 
     auto Model::processMesh(aiMesh *mesh, const aiScene *scene) -> void
