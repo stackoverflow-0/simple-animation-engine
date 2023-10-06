@@ -78,7 +78,7 @@ find_package(NLOHMANN REQUIRED)
 message(STATUS "Found NLOHMANN in ${NLOHMANN_INCLUDE_DIR}")
 
 # STB_IMAGE
-add_library(STB_IMAGE "src/third-library/stb_image.cpp")
+add_library(STB_IMAGE "src/stb-image/stb_image.cpp")
 
 # # GLAD
 # add_library(GLAD "src/thirdparty/glad.c")

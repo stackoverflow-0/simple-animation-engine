@@ -8,9 +8,15 @@ Using assimp, nlohmann, glfw, glew lib.
 
 ## Build
 
+### Windows
+
 visual studio (vs 2022 is tested) and msvc x86 compiler. CMake. You can replace x86 lib with x64 lib in this project to build for x64 platform.
 
 Recommand to build with vscode and cmake extension.
+
+### Linux
+
+clang (clang 16 is tested), need to install glfw / glew library. Maybe later these libs will be added to project.
 
 ## Run Env
 
