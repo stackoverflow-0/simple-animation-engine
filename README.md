@@ -16,7 +16,7 @@ Recommand to build with vscode and cmake extension.
 
 ### Linux
 
-clang (clang 16 is tested), need to install glfw / glew library. Maybe later these libs will be added to project.
+clang (clang 16 is tested, you can use other compiler), need to install glfw / glew library. Maybe later these libs will be added to project.
 
 ## Run Env
 
