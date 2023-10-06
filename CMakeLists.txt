@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.26.3)
+set (CMAKE_GENERATOR_PLATFORM Win32)
 
 project(skeleton-animation)
 set (CMAKE_CXX_STANDARD 20)
+
 
 # Add .lib files
 link_directories(${CMAKE_SOURCE_DIR}/lib)
