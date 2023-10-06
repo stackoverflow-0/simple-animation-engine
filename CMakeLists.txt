@@ -16,6 +16,11 @@ file(GLOB_RECURSE HEADER_FILES
 	${CMAKE_SOURCE_DIR}/src/*.h
 	${CMAKE_SOURCE_DIR}/src/*.hpp)
 
+file(RELATIVE_PATH ROOT_DIR
+	${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}
+	${CMAKE_SOURCE_DIR})
+message(STATUS "root related path" "${CMAKE_CURRENT_BINARY_DIR}/")
+message(STATUS "root related path" "${ROOT_DIR}")
 # Configure assets header file
 configure_file(src/render/cmake-source-dir.hpp.in src/render/cmake-source-dir.hpp)
 include_directories(${CMAKE_BINARY_DIR}/src)

@@ -1,8 +1,8 @@
 {
-    "model_path": "asset/models/Spartan-Sketchfab.fbx",
+    "model_path": "asset/models/ue-human.fbx",
     "import_animation": true,
     "scale": 0.02,
-    "skeleton_root": "group",
+    "skeleton_root": "root",
     "play_anim_track": 0,
     "speed": 1.0
 }
