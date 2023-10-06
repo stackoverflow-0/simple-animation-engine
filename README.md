@@ -16,6 +16,8 @@ Recommand to build with vscode and cmake extension.
 
 Require [VC redist](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170). Please make sure u have installed latest vc redist!
 
+Note: run directly in visual studio might cause file path fault.
+
 ## How to use
 
 Change `asset/config.json` with your model path & animation play options.
