@@ -1,4 +1,4 @@
-#version 430
+#version 420
 
 in vec3 o_position;
 in vec3 o_normal;

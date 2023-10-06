@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26.3)
-set (CMAKE_GENERATOR_PLATFORM Win32)
+# set (CMAKE_GENERATOR_PLATFORM Win32)
 
 project(skeleton-animation)
 set (CMAKE_CXX_STANDARD 20)
@@ -18,10 +18,19 @@ file(GLOB_RECURSE HEADER_FILES
 	${CMAKE_SOURCE_DIR}/src/*.h
 	${CMAKE_SOURCE_DIR}/src/*.hpp)
 
-file(RELATIVE_PATH ROOT_DIR
-	${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}
-	${CMAKE_SOURCE_DIR})
-message(STATUS "root related path" "${CMAKE_CURRENT_BINARY_DIR}/")
+if(WIN32)
+	file(RELATIVE_PATH ROOT_DIR
+		${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}
+		${CMAKE_SOURCE_DIR})
+else()
+	file(RELATIVE_PATH ROOT_DIR
+		${CMAKE_CURRENT_BINARY_DIR}
+		${CMAKE_SOURCE_DIR})
+endif()
+
+
+
+# message(STATUS "root related path" "${CMAKE_CURRENT_BINARY_DIR}/")
 message(STATUS "root related path" "${ROOT_DIR}")
 # Configure assets header file
 configure_file(src/render/cmake-source-dir.hpp.in src/render/cmake-source-dir.hpp)
@@ -49,9 +58,12 @@ message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(GLFW3 REQUIRED)
 message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIR}")
 
+
 # Imgui
-find_package(IMGUI REQUIRED)
-message(STATUS "Found IMGUI in ${IMGUI_INCLUDE_DIR}")
+# find_package(IMGUI REQUIRED)
+# message(STATUS "Found IMGUI in ${IMGUI_INCLUDE_DIR}")
+file(GLOB_RECURSE IMGUI_SOURCE ${CMAKE_SOURCE_DIR}/src/imgui/*.cpp)
+add_library(IMGUI ${IMGUI_SOURCE})
 
 # ASSIMP
 find_package(ASSIMP REQUIRED)
@@ -73,7 +85,7 @@ add_library(STB_IMAGE "src/third-library/stb_image.cpp")
 
 # Put all libraries into a variable
 # set(LIBS ${GLFW3_LIBRARY} ${OPENGL_LIBRARY} GLAD ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} STB_IMAGE)
-set(LIBS ${GLFW3_LIBRARY} ${OPENGL_LIBRARY} ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} ${GLEW_LIBRARY} STB_IMAGE)
+set(LIBS ${GLFW3_LIBRARY} ${OPENGL_LIBRARY} ${CMAKE_DL_LIBS} ${ASSIMP_LIBRARY} ${GLEW_LIBRARY} IMGUI STB_IMAGE)
 
 # Define the include DIRs
 include_directories(
@@ -112,5 +124,10 @@ if(WIN32)
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 		"${PROJECT_SOURCE_DIR}/bin"
+		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
+else()
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+		"${PROJECT_SOURCE_DIR}/lib/*.so"
 		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()# <--this is out-file path
