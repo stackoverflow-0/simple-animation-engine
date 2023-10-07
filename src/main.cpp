@@ -48,7 +48,7 @@ int main()
     auto projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(1024), float(768), 0.1f, 10.0f);
 
     auto time{0.0f};
-    auto last_clock = std::chrono::_V2::system_clock::time_point{};
+    auto last_clock = std::chrono::high_resolution_clock().now();
     auto frame_id{0};
 
     auto weight_left_frame{1.0f};
