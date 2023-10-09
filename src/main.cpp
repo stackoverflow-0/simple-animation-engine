@@ -107,7 +107,7 @@ int main()
         }
 
         if (human_with_skeleton.speed > 0.0f) {
-            time += delta_frame_time;
+            // time += delta_frame_time;
             speed = human_with_skeleton.speed;
         }
 
@@ -115,9 +115,12 @@ int main()
         auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
 
         auto frame_time{1.0f / speed / track.frame_per_second};
-
-        weight_right_frame = time / frame_time;
-        weight_left_frame = 1.0f - weight_right_frame;
+        
+        if (human_with_skeleton.speed > 0.0f) {
+            weight_right_frame += delta_frame_time / frame_time;
+            weight_left_frame = 1.0f - weight_right_frame;
+        }
+        
 
         shader.apply();
         shader.setUniform1b("import_animation", human_with_skeleton.import_animation);
@@ -157,9 +160,10 @@ int main()
             glEnable(GL_DEPTH_TEST);
         }
 
-        if (time >= frame_time) {
+        if ( weight_right_frame >= 1.0f) {
             frame_id++;
-            time = 0.0f;
+            // time = 0.0f;
+            weight_right_frame = 0.0f;
             // last_clock = ;
             // fps = 0;
         }
