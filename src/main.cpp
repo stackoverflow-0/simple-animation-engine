@@ -132,7 +132,14 @@ int main()
         shader.setUniform1i("frame_id", frame_id);
         shader.setUniform1f("left_weight", weight_left_frame);
         shader.setUniform1f("right_weight", weight_right_frame);
-        shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
+        auto track_tex_id = std::vector<int>{};
+        for (auto id = 0; id < human_with_skeleton.tracks.size(); id++) {
+            track_tex_id.emplace_back(id + 2);
+        }
+        shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
+        shader.setUniform1i("blend_anim_num", 2);
+        shader.setUniform1fv("blend_weights", 2, std::vector{0.5f, 0.5f}.data());
+        // shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
         shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
         gizmo_shader.apply();
@@ -209,7 +216,7 @@ int main()
                         auto componect_pos = ImGui::GetCursorScreenPos();
                         auto component_rect = ImRect(componect_pos, ImVec2(component_width, component_width) + componect_pos);
                         static auto cur_offset_in_rect = ImVec2(0, 0);
-                        
+
                         ImGui::GetForegroundDrawList()->AddRect(component_rect.Min, component_rect.Max, IM_COL32(0, 0, 255, 255), 0.0f, 0, 3.0f);
 
                         if (ImGui::IsMouseHoveringRect(component_rect.Min, component_rect.Max) && ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
@@ -244,6 +251,8 @@ int main()
             glViewport(0, 0, render::window::SCR_WIDTH, render::window::SCR_HEIGHT);
 
             display();
+
+            // assert(false);
 
         } while (render::window::swapAndPollInput());
     };
