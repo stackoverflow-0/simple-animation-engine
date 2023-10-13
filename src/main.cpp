@@ -57,6 +57,7 @@ int main()
     auto speed{1.0f};
 
     auto show_bone_gizmo{false};
+    auto show_blend_space{false};
 
     auto bone_gizmo_color = glm::vec4(0.0f, 1.0f, 0.7f, 1.0f);
 
@@ -115,12 +116,16 @@ int main()
         auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
 
         auto frame_time{1.0f / speed / track.frame_per_second};
-        
+
+        if (frame_id >= track.duration) {
+            frame_id = 0;
+            weight_right_frame = 0.0f;
+        }
+
         if (human_with_skeleton.speed > 0.0f) {
             weight_right_frame += delta_frame_time / frame_time;
             weight_left_frame = 1.0f - weight_right_frame;
         }
-        
 
         shader.apply();
         shader.setUniform1b("import_animation", human_with_skeleton.import_animation);
@@ -138,10 +143,6 @@ int main()
         gizmo_shader.setUniform4fv("gizmo_color", bone_gizmo_color);
         gizmo_shader.setUniform1f("gizmo_scale", gizmo_model.scale);
 
-
-        if (frame_id > track.duration - 1) {
-            frame_id = 0;
-        }
 
         shader.apply();
         human_with_skeleton.draw();
@@ -197,6 +198,35 @@ int main()
                     else
                         ImGui::Text("Disable bone weight visualize");
                     ImGui::SliderInt("bone", &human_with_skeleton.show_bone_weight_id, -1, human_with_skeleton.bones.size() - 1);
+
+                    // ImGui::Text("Blend Space");
+                    ImGui::Checkbox("show blend space", &show_blend_space);
+                    // ImGui::InvisibleButton("layout", ImVec2(100, 100), 0);
+                    if (show_blend_space) {
+                        auto iID = ImGui::GetID("layout");
+                        ImGui::PushID(iID);
+                        auto component_width = 0.7f * (ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x);
+                        auto componect_pos = ImGui::GetCursorScreenPos();
+                        auto component_rect = ImRect(componect_pos, ImVec2(component_width, component_width) + componect_pos);
+                        static auto cur_offset_in_rect = ImVec2(0, 0);
+                        
+                        ImGui::GetForegroundDrawList()->AddRect(component_rect.Min, component_rect.Max, IM_COL32(0, 0, 255, 255), 0.0f, 0, 3.0f);
+
+                        if (ImGui::IsMouseHoveringRect(component_rect.Min, component_rect.Max) && ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
+                            auto cur_pos = ImGui::GetMousePos();
+                            cur_offset_in_rect = (cur_pos - component_rect.Min) / component_width;
+                        }
+                        auto cur_pos_ref = cur_offset_in_rect * component_width + component_rect.Min;
+
+                        ImGui::GetForegroundDrawList()->AddLine(ImVec2(cur_pos_ref.x, component_rect.Min.y), ImVec2(cur_pos_ref.x, component_rect.Max.y), IM_COL32(100, 100, 100, 255), 3.0f);
+                        ImGui::GetForegroundDrawList()->AddLine(ImVec2(component_rect.Min.x, cur_pos_ref.y), ImVec2(component_rect.Max.x, cur_pos_ref.y), IM_COL32(100, 100, 100, 255), 3.0f);
+                        ImGui::GetForegroundDrawList()->AddCircleFilled(cur_pos_ref, 3.0f, IM_COL32( 255, 255, 0, 255 ), 0);
+
+                        ImGui::PopID();
+                        ImGui::Dummy(ImVec2(component_width, component_width));
+                        // assert(false);
+                    }
+
                     ImGui::Checkbox("show bone gizmo", &show_bone_gizmo);
 
                     if (show_bone_gizmo) {
