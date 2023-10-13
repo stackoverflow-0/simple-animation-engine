@@ -75,6 +75,13 @@ int main()
 
     auto fps_sec{0.0f};
 
+    auto slider2d_pos = ImVec2(0, 0);
+
+    auto anim_blendspace_pos = std::vector<ImVec2>{};
+    anim_blendspace_pos.emplace_back(0.0f , 0.0f);
+    anim_blendspace_pos.emplace_back(0.5f , 0.0f);
+    anim_blendspace_pos.emplace_back(0.0f , 0.5f);
+
     auto display = [&]()
     {
         auto view_matrix  = glm::lookAt(render::window::cam_position, render::window::cam_look_at, render::window::cam_up);
@@ -230,30 +237,84 @@ int main()
                     ImGui::Checkbox("show blend space", &show_blend_space);
                     // ImGui::InvisibleButton("layout", ImVec2(100, 100), 0);
                     if (show_blend_space) {
-                        ImGui::SliderFloat("test weight", &blend_weights[0], 0.0f, 1.0f);
-                        blend_weights[1] = 1.0f - blend_weights[0];
+                        // ImGui::SliderFloat("test weight", &blend_weights[0], 0.0f, 1.0f);
+                        // blend_weights[1] = 1.0f - blend_weights[0];
                         auto iID = ImGui::GetID("layout");
                         ImGui::PushID(iID);
                         auto component_width = 0.7f * (ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x);
                         auto componect_pos = ImGui::GetCursorScreenPos();
                         auto component_rect = ImRect(componect_pos, ImVec2(component_width, component_width) + componect_pos);
-                        static auto cur_offset_in_rect = ImVec2(0, 0);
 
+                        auto p0 = (anim_blendspace_pos[0] + ImVec2(0.5f, 0.5f)) * component_width;
+                        p0.y = - p0.y + component_width;
+                        p0 += component_rect.Min;
+                        auto p1 = (anim_blendspace_pos[1] + ImVec2(0.5f, 0.5f)) * component_width;
+                        p1.y = - p1.y + component_width;
+                        p1 += component_rect.Min;
+                        auto p2 = (anim_blendspace_pos[2] + ImVec2(0.5f, 0.5f)) * component_width;
+                        p2.y = - p2.y + component_width;
+                        p2 += component_rect.Min;
+
+                        ImGui::GetForegroundDrawList()->AddLine(p0, p1, IM_COL32(255, 255, 255, 255), 3.0f);
+                        ImGui::GetForegroundDrawList()->AddLine(p1, p2, IM_COL32(255, 255, 255, 255), 3.0f);
+                        ImGui::GetForegroundDrawList()->AddLine(p2, p0, IM_COL32(255, 255, 255, 255), 3.0f);
+                        ImGui::GetForegroundDrawList()->AddCircleFilled(p0, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
+                        ImGui::GetForegroundDrawList()->AddCircleFilled(p1, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
+                        ImGui::GetForegroundDrawList()->AddCircleFilled(p2, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
+                        
                         ImGui::GetForegroundDrawList()->AddRect(component_rect.Min, component_rect.Max, IM_COL32(0, 0, 255, 255), 0.0f, 0, 3.0f);
 
                         if (ImGui::IsMouseHoveringRect(component_rect.Min, component_rect.Max) && ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
                             auto cur_pos = ImGui::GetMousePos();
-                            cur_offset_in_rect = (cur_pos - component_rect.Min) / component_width;
+                            auto tmp_slider2d_pos = (cur_pos - component_rect.GetCenter()) / component_width;
+                            tmp_slider2d_pos.y = - tmp_slider2d_pos.y;
+                            // auto weight = glm::inverse(glm::mat3x3{
+                            //     anim_blendspace_pos[0].x, anim_blendspace_pos[0].y, 1.0f,
+                            //     anim_blendspace_pos[1].x, anim_blendspace_pos[1].y, 1.0f,
+                            //     anim_blendspace_pos[2].x, anim_blendspace_pos[2].y, 1.0f}
+                            // ) * glm::vec3(tmp_slider2d_pos.x, tmp_slider2d_pos.y, 1.0f);
+
+                            // auto weight_x = weight.x;
+                            // auto weight_y = weight.y;
+                            // auto weight_z = weight.z;
+
+                            auto& pa = anim_blendspace_pos[0];
+                            auto& pb = anim_blendspace_pos[1];
+                            auto& pc = anim_blendspace_pos[2];
+                            auto weight_x = (- (tmp_slider2d_pos.x - pb.x) * (pc.y - pb.y) + (tmp_slider2d_pos.y - pb.y) * (pc.x - pb.x))
+                                            / (- (pa.x - pb.x) * (pc.y - pb.y) + (pa.y - pb.y) * (pc.x - pb.x));
+
+                            auto weight_y = (- (tmp_slider2d_pos.x - pc.x) * (pa.y - pc.y) + (tmp_slider2d_pos.y - pc.y) * (pa.x - pc.x))
+                                            / (- (pb.x - pc.x) * (pa.y - pc.y) + (pb.y - pc.y) * (pa.x - pc.x));
+
+                            auto weight_z = 1.0f - weight_x - weight_y;
+                            if (weight_x >= 0.0f && weight_y >= 0.0f && weight_z >= 0.0f) {
+                                constexpr auto hold_val = 0.01f;
+                                if (weight_x < hold_val)
+                                    weight_x = 0.0f;
+                                if (weight_y < hold_val)
+                                    weight_y = 0.0f;
+                                if (weight_z < hold_val)
+                                    weight_z = 0.0f;
+                                blend_weights[0] = weight_x > 0.0f ? weight_x : 0.0f;
+                                blend_weights[1] = weight_y > 0.0f ? weight_y : 0.0f;
+                                blend_weights[2] = weight_z > 0.0f ? weight_z : 0.0f;
+                                slider2d_pos = tmp_slider2d_pos;
+                            }
                         }
-                        auto cur_pos_ref = cur_offset_in_rect * component_width + component_rect.Min;
+                        auto cur_pos_ref = (slider2d_pos + ImVec2(0.5f, 0.5f)) * component_width;
+                        cur_pos_ref.y = - cur_pos_ref.y + component_width;
+                        cur_pos_ref += component_rect.Min;
 
                         ImGui::GetForegroundDrawList()->AddLine(ImVec2(cur_pos_ref.x, component_rect.Min.y), ImVec2(cur_pos_ref.x, component_rect.Max.y), IM_COL32(100, 100, 100, 255), 3.0f);
                         ImGui::GetForegroundDrawList()->AddLine(ImVec2(component_rect.Min.x, cur_pos_ref.y), ImVec2(component_rect.Max.x, cur_pos_ref.y), IM_COL32(100, 100, 100, 255), 3.0f);
+
                         ImGui::GetForegroundDrawList()->AddCircleFilled(cur_pos_ref, 3.0f, IM_COL32( 255, 255, 0, 255 ), 0);
 
                         ImGui::PopID();
                         ImGui::Dummy(ImVec2(component_width, component_width));
                         // assert(false);
+                        ImGui::Text("blend weight\nanim0 - %.2f\nanim1 - %.2f\nanim2 - %.2f\n", blend_weights[0], blend_weights[1], blend_weights[2]);
                     }
 
                     ImGui::Checkbox("show bone gizmo", &show_bone_gizmo);
