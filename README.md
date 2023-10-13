@@ -4,9 +4,7 @@ Using assimp, nlohmann, glfw, glew lib.
 
 ## Sample animation
 
-![alt text](./readme-asset//ui-sample.gif "ui sample gif")
-
-![alt text](./readme-asset//bs-sample.gif "ui sample gif")
+![alt text](./readme-asset//bs-sample.gif "bs sample gif")
 
 ## Build
 
