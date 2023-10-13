@@ -52,6 +52,12 @@ int main()
     auto frame_ids = std::vector<int>{};
     frame_ids.resize(human_with_skeleton.tracks.size());
 
+    auto blend_weights = std::vector<float>{1.0f, 0.0f, 0.0f};
+    auto track_tex_id = std::vector<int>{};
+    for (auto id = 0; id < human_with_skeleton.tracks.size(); id++) {
+        track_tex_id.emplace_back(id + 2);
+    }
+
     auto weight_left_frame{1.0f};
     auto weight_right_frame{0.0f};
 
@@ -113,7 +119,6 @@ int main()
             speed = human_with_skeleton.speed;
         }
 
-
         auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
 
         auto frame_time{1.0f / speed / track.frame_per_second};
@@ -131,18 +136,25 @@ int main()
             weight_left_frame = 1.0f - weight_right_frame;
         }
 
+        if (!show_blend_space) {
+            for (auto i = 0; i < blend_weights.size(); i++) {
+                if (i == human_with_skeleton.play_anim_track) {
+                    blend_weights[i] = 1.0f;
+                } else {
+                    blend_weights[i] = 0.0f;
+                }
+            }
+        }
+
         shader.apply();
         shader.setUniform1b("import_animation", human_with_skeleton.import_animation);
         shader.setUniform1iv("frame_ids", 3, frame_ids.data());
         shader.setUniform1f("left_weight", weight_left_frame);
         shader.setUniform1f("right_weight", weight_right_frame);
-        auto track_tex_id = std::vector<int>{};
-        for (auto id = 0; id < human_with_skeleton.tracks.size(); id++) {
-            track_tex_id.emplace_back(id + 2);
-        }
+
         shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
         shader.setUniform1i("blend_anim_num", 3);
-        shader.setUniform1fv("blend_weights", 3, std::vector{0.0f, 1.0f, 1.0f}.data());
+        shader.setUniform1fv("blend_weights", 3, blend_weights.data());
         // shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
         shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
@@ -156,7 +168,7 @@ int main()
         // }
         gizmo_shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
         gizmo_shader.setUniform1i("blend_anim_num", 3);
-        gizmo_shader.setUniform1fv("blend_weights", 3, std::vector{0.0f, 1.0f, 1.0f}.data());
+        gizmo_shader.setUniform1fv("blend_weights", 3, blend_weights.data());
         gizmo_shader.setUniform4fv("gizmo_color", bone_gizmo_color);
         gizmo_shader.setUniform1f("gizmo_scale", gizmo_model.scale);
 
@@ -212,8 +224,11 @@ int main()
                 if (human_with_skeleton.import_animation) {
                     ImGui::SliderFloat("speed", &human_with_skeleton.speed, 0.0f, 2.0f);
                     ImGui::SliderFloat("scale", &human_with_skeleton.scale, 0.0f, human_with_skeleton_config_scale * 2.0f);
-                    ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
-                    ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
+                    if (!show_blend_space) {
+                        ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
+                        ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
+                    }
+
                     if (human_with_skeleton.show_bone_weight_id >= 0)
                         ImGui::Text("%d - %s", human_with_skeleton.show_bone_weight_id, human_with_skeleton.bones[human_with_skeleton.show_bone_weight_id].name.c_str());
                     else
@@ -224,6 +239,8 @@ int main()
                     ImGui::Checkbox("show blend space", &show_blend_space);
                     // ImGui::InvisibleButton("layout", ImVec2(100, 100), 0);
                     if (show_blend_space) {
+                        ImGui::SliderFloat("test weight", &blend_weights[0], 0.0f, 1.0f);
+                        blend_weights[1] = 1.0f - blend_weights[0];
                         auto iID = ImGui::GetID("layout");
                         ImGui::PushID(iID);
                         auto component_width = 0.7f * (ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x);
