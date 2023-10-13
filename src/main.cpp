@@ -155,17 +155,12 @@ int main()
         shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
         shader.setUniform1i("blend_anim_num", 3);
         shader.setUniform1fv("blend_weights", 3, blend_weights.data());
-        // shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
         shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
         gizmo_shader.apply();
         gizmo_shader.setUniform1iv("frame_ids", 3, frame_ids.data());
         gizmo_shader.setUniform1f("left_weight", weight_left_frame);
         gizmo_shader.setUniform1f("right_weight", weight_right_frame);
-        // auto track_tex_id = std::vector<int>{};
-        // for (auto id = 0; id < human_with_skeleton.tracks.size(); id++) {
-        //     track_tex_id.emplace_back(id + 2);
-        // }
         gizmo_shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
         gizmo_shader.setUniform1i("blend_anim_num", 3);
         gizmo_shader.setUniform1fv("blend_weights", 3, blend_weights.data());
@@ -193,11 +188,7 @@ int main()
             for (auto& frame_id: frame_ids) {
                 frame_id++;
             }
-
-            // time = 0.0f;
             weight_right_frame = 0.0f;
-            // last_clock = ;
-            // fps = 0;
         }
     };
 
