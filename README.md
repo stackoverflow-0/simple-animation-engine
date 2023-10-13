@@ -6,6 +6,8 @@ Using assimp, nlohmann, glfw, glew lib.
 
 ![alt text](./readme-asset//ui-sample.gif "ui sample gif")
 
+![alt text](./readme-asset//bs-sample.gif "ui sample gif")
+
 ## Build
 
 ### Windows
