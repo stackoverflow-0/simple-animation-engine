@@ -75,5 +75,5 @@ namespace render
         }
     }
 
-    auto setup_glfw3() -> bool;
+    auto setup_glfw3_and_imgui() -> bool;
 } // namespace render

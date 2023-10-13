@@ -11,7 +11,7 @@
 int main()
 {
     // std::cout << sizeof(glm::dualquat) / sizeof(float) << std::endl;
-    auto setup_status = render::setup_glfw3();
+    auto setup_status = render::setup_glfw3_and_imgui();
     if (!setup_status) {
         return 1;
     }
