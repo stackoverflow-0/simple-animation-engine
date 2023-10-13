@@ -49,7 +49,8 @@ int main()
 
     auto time{0.0f};
     auto last_clock = std::chrono::high_resolution_clock().now();
-    auto frame_id{0};
+    auto frame_ids = std::vector<int>{};
+    frame_ids.resize(human_with_skeleton.tracks.size());
 
     auto weight_left_frame{1.0f};
     auto weight_right_frame{0.0f};
@@ -117,9 +118,12 @@ int main()
 
         auto frame_time{1.0f / speed / track.frame_per_second};
 
-        if (frame_id >= track.duration) {
-            frame_id = 0;
-            weight_right_frame = 0.0f;
+        for (auto id = 0; id < frame_ids.size(); id++) {
+            auto& frame_id = frame_ids[id];
+            if (frame_id >= human_with_skeleton.tracks[id].duration) {
+                frame_id = 0;
+                weight_right_frame = 0.0f;
+            }
         }
 
         if (human_with_skeleton.speed > 0.0f) {
@@ -129,7 +133,7 @@ int main()
 
         shader.apply();
         shader.setUniform1b("import_animation", human_with_skeleton.import_animation);
-        shader.setUniform1i("frame_id", frame_id);
+        shader.setUniform1iv("frame_ids", 3, frame_ids.data());
         shader.setUniform1f("left_weight", weight_left_frame);
         shader.setUniform1f("right_weight", weight_right_frame);
         auto track_tex_id = std::vector<int>{};
@@ -137,19 +141,24 @@ int main()
             track_tex_id.emplace_back(id + 2);
         }
         shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
-        shader.setUniform1i("blend_anim_num", 2);
-        shader.setUniform1fv("blend_weights", 2, std::vector{0.5f, 0.5f}.data());
+        shader.setUniform1i("blend_anim_num", 3);
+        shader.setUniform1fv("blend_weights", 3, std::vector{0.0f, 1.0f, 1.0f}.data());
         // shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
         shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
         gizmo_shader.apply();
-        gizmo_shader.setUniform1i("frame_id", frame_id);
+        gizmo_shader.setUniform1iv("frame_ids", 3, frame_ids.data());
         gizmo_shader.setUniform1f("left_weight", weight_left_frame);
         gizmo_shader.setUniform1f("right_weight", weight_right_frame);
-        gizmo_shader.setUniform1i("bone_current_pose", 2 + human_with_skeleton.play_anim_track);
+        // auto track_tex_id = std::vector<int>{};
+        // for (auto id = 0; id < human_with_skeleton.tracks.size(); id++) {
+        //     track_tex_id.emplace_back(id + 2);
+        // }
+        gizmo_shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
+        gizmo_shader.setUniform1i("blend_anim_num", 3);
+        gizmo_shader.setUniform1fv("blend_weights", 3, std::vector{0.0f, 1.0f, 1.0f}.data());
         gizmo_shader.setUniform4fv("gizmo_color", bone_gizmo_color);
         gizmo_shader.setUniform1f("gizmo_scale", gizmo_model.scale);
-
 
         shader.apply();
         human_with_skeleton.draw();
@@ -169,7 +178,10 @@ int main()
         }
 
         if ( weight_right_frame >= 1.0f) {
-            frame_id++;
+            for (auto& frame_id: frame_ids) {
+                frame_id++;
+            }
+
             // time = 0.0f;
             weight_right_frame = 0.0f;
             // last_clock = ;
@@ -189,6 +201,8 @@ int main()
         do
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            auto draw_imgui = [&]() -> void {
                 ImGui_ImplOpenGL3_NewFrame();
                 ImGui_ImplGlfw_NewFrame();
                 ImGui::NewFrame();
@@ -245,7 +259,8 @@ int main()
                 ImGui::End();
                 ImGui::Render();
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+            };
+            draw_imgui();
             glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
             projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(render::window::SCR_WIDTH), float(render::window::SCR_HEIGHT), 0.1f, 10.0f);
             glViewport(0, 0, render::window::SCR_WIDTH, render::window::SCR_HEIGHT);
