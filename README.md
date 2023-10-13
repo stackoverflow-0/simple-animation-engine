@@ -5,6 +5,7 @@ Using assimp, nlohmann, glfw, glew lib.
 ## Sample animation
 
 ![alt text](./readme-asset//bs-sample.gif "bs sample gif")
+![alt text](./readme-asset//bs2d-sample.gif "bs2D sample gif")
 
 ## Build
 
