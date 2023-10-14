@@ -48,7 +48,13 @@ namespace assimp_model
         std::vector<glm::quat> rotations{};
         std::vector<glm::vec3> positions{};
         std::vector<glm::vec3> scales{};
-        std::vector<float> times{};
+        // std::vector<float> times{};
+    };
+
+    struct Bone_Trans final {
+        glm::quat rotation{};
+        glm::vec3 position{};
+        glm::vec3 scale{};
     };
 
     struct Track final
@@ -57,7 +63,7 @@ namespace assimp_model
         float duration{};
         float frame_per_second{1};
         std::vector<Channel> channels{};
-        unsigned int track_anim_texture{};
+        // unsigned int track_anim_texture{};
     };
 
     struct Mesh final
@@ -106,6 +112,7 @@ namespace assimp_model
         std::string skeleton_root{};
 
         // bool show_bone_weight{false};
+        unsigned int track_anim_texture{0};
 
         bool import_animation{false};
 
@@ -130,7 +137,7 @@ namespace assimp_model
 
         auto create_bind_pose_matrix_texure() -> void;
 
-        auto create_track_anim_matrix_texure(int track_index) -> void;
+        auto create_anim_matrix_texure(std::vector<int>& frame_id, float left_weight, float right_weight, std::vector<float>& weights) -> void;
 
         auto bind_textures() -> void;
 
@@ -139,12 +146,16 @@ namespace assimp_model
             uniform_mesh.setup_mesh(import_animation);
             if (import_animation) {
                 create_bind_pose_matrix_texure();
-                for (int track_id = 0; track_id < tracks.size(); track_id++) {
-                    create_track_anim_matrix_texure(track_id);
-                }
+                // for (int track_id = 0; track_id < tracks.size(); track_id++) {
+                //     create_anim_matrix_texure(track_id);
+                // }
                 bind_textures();
             }
             
+        }
+
+        auto blend_tracks(std::vector<int>& frame_id, float left_weight, float right_weight,std::vector<float>& weights) {
+            create_anim_matrix_texure(frame_id, left_weight, right_weight, weights);
         }
     };
 } // namespace mesh

@@ -222,7 +222,7 @@ namespace assimp_model
                         channel.rotations.resize(channel_node->mNumRotationKeys, glm::identity<glm::quat>());
                         channel.positions.resize(channel_node->mNumRotationKeys, glm::vec3(0,0,0));
                         channel.scales.resize(channel_node->mNumRotationKeys, glm::vec3(1.0f, 1.0f, 1.0f));
-                        channel.times.resize(channel_node->mNumRotationKeys);
+                        // channel.times.resize(channel_node->mNumRotationKeys);
 
                         for (auto key_id = 0; key_id < channel_node->mNumRotationKeys; key_id++)
                         {
@@ -240,7 +240,7 @@ namespace assimp_model
                             //     * glm::scale(glm::mat4x4(1.0f), glm::vec3(scale.x, scale.y, scale.z))
                             //     * glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)) ;
 
-                            channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
+                            // channel.times[key_id] = channel_node->mRotationKeys[key_id].mTime;
                         }
                     }
                 }
@@ -404,74 +404,80 @@ namespace assimp_model
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    auto Model::create_track_anim_matrix_texure(int track_index) -> void
+    auto Model::create_anim_matrix_texure(std::vector<int>& frame_ids, float left_weight, float right_weight, std::vector<float>& weights) -> void
     {
-        assert(track_index < tracks.size());
+        // assert(track_index < tracks.size());
+        auto bone_num = bone_name_to_id.size();
+        // auto &track_anim_texture = tracks[track_index].track_anim_texture;
+        auto current_frame = std::vector<Bone_Trans>{};
+        current_frame.resize(bone_num);
+        
+        for (int i = 0; i < bone_num; i++) {
+            auto trans = glm::vec3{};
+            auto rotation = std::vector<glm::quat>{};
+            auto scale = glm::vec3{};
 
-        auto &channels = tracks[track_index].channels;
-        auto &track_anim_texture = tracks[track_index].track_anim_texture;
+            for (int j = 0; j < weights.size(); j++) {
+                auto& trans_l = tracks[j].channels[i].positions[frame_ids[j]    ];
+                auto& trans_r = tracks[j].channels[i].positions[frame_ids[j] + 1];
 
-        auto channel_frame_num{0};
-        for (auto& c: channels) {
-            if (c.rotations.size() > channel_frame_num)
-                channel_frame_num = c.rotations.size();
+                auto& rotation_l = tracks[j].channels[i].rotations[frame_ids[j]    ];
+                auto& rotation_r = tracks[j].channels[i].rotations[frame_ids[j] + 1];
+
+                auto& scale_l = tracks[j].channels[i].scales[frame_ids[j]    ];
+                auto& scale_r = tracks[j].channels[i].scales[frame_ids[j] + 1];
+
+                trans += weights[j] * (left_weight * trans_l + right_weight * trans_r);
+                rotation.emplace_back((glm::slerp(rotation_l, rotation_r, right_weight)));
+                scale += weights[j] * (left_weight * scale_l + right_weight * scale_r);
+            }
+
+            current_frame[i].position = trans;
+            auto tmp_quat = weights[0] + weights[1] > 0.0f ? glm::slerp(rotation[0], rotation[1], weights[1] / (weights[0] + weights[1])) : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+            current_frame[i].rotation = glm::slerp(tmp_quat, rotation[2], weights[2] / (weights[0] + weights[1] + weights[2]));
+            current_frame[i].scale = scale;
         }
-        auto channel_num = channels.size();
+        
+        // auto channel_num = channels.size();
 
         std::vector<glm::mat4x4> tmp_anim_pose_frames{};
 
-        tmp_anim_pose_frames.resize(channel_num * channel_frame_num, glm::identity<glm::mat4x4>());
+        tmp_anim_pose_frames.resize(bone_num, glm::identity<glm::mat4x4>());
 
-        auto get_world_transform = [&](int bone_id, int frame_id) -> glm::mat4x4 {
+        auto get_world_transform = [&](int bone_id) -> glm::mat4x4 {
             auto bone_it{bone_id};
             glm::quat world_rotation = glm::identity<glm::quat>();
             glm::vec3 world_transform = glm::vec3();
             glm::vec3 world_scale = glm::vec3(1.0f, 1.0f, 1.0f);
+
             while (bone_it != -1) {
+                auto& current_bone = current_frame[bone_it];
+                auto tmp_world_transform = current_bone.position + current_bone.rotation * (current_bone.scale * world_transform);
+                auto tmp_world_scale = current_bone.scale * world_scale;
+                auto tmp_world_rotation = current_bone.rotation * world_rotation;
 
-                auto& channel_it = channels[bone_it];
-
-                auto frame_sz = channel_it.rotations.size();
-
-                if (frame_sz == 0) {
-                    bone_it = bones[bone_it].parent_id;
-                    continue;
-                }
-
-                auto r_frame_id = frame_id >= frame_sz ? frame_sz - 1 : frame_id;
-                // r_frame_id = frame_id;
-                // if (channel_it.rotations[r_frame_id] != glm::quat(0,0,0,0)) {
-                auto tmp_world_transform = channel_it.positions[r_frame_id] + channel_it.rotations[r_frame_id] * (channel_it.scales[r_frame_id] * world_transform);
-                auto tmp_world_scale = channel_it.scales[r_frame_id] * world_scale;
-                auto tmp_world_rotation = channel_it.rotations[r_frame_id] * world_rotation;
-                // }
                 world_transform = tmp_world_transform;
                 world_rotation = tmp_world_rotation;
                 world_scale = tmp_world_scale;
 
-                // if (channels[bone_it].trans_matrix[r_frame_id] != glm::mat4x4(0)) {
-                //     world_transform =  channels[bone_it].trans_matrix[r_frame_id] * world_transform;
-                // }
-
                 bone_it = bones[bone_it].parent_id;
-                // break;
             }
             return glm::translate(glm::mat4x4(1.0f), world_transform)
                     * glm::scale(glm::mat4x4(1.0f), world_scale)
                     * glm::toMat4(world_rotation);
         };
 
-        for (auto i = 0; i < channel_frame_num; i++)
+        for (auto i = 0; i < bone_num; i++)
         {
-            for (auto cid = 0; cid < channel_num; cid++)
-            {
-                tmp_anim_pose_frames[i * channel_num + cid] = get_world_transform(cid, i);
-            }
+            tmp_anim_pose_frames[i] = get_world_transform(i);
         }
+        // if (track_anim_texture == 0)
         glGenTextures(1, &track_anim_texture);
+
+        // glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, track_anim_texture);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, channel_num * 4, channel_frame_num, 0, GL_RGBA, GL_FLOAT, tmp_anim_pose_frames.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tmp_anim_pose_frames.size() * 4, 1, 0, GL_RGBA, GL_FLOAT, tmp_anim_pose_frames.data());
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -490,12 +496,17 @@ namespace assimp_model
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, bind_pose_texture);
-        auto track_index{0};
-        for (auto &track : tracks)
-        {
-            glActiveTexture(GL_TEXTURE2 + track_index);
-            glBindTexture(GL_TEXTURE_2D, track.track_anim_texture);
-            track_index++;
-        }
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, track_anim_texture);
+
+        
+        // auto track_index{0};
+        // for (auto &track : tracks)
+        // {
+        //     glActiveTexture(GL_TEXTURE2 + track_index);
+        //     glBindTexture(GL_TEXTURE_2D, track.track_anim_texture);
+        //     track_index++;
+        // }
     }
 } // namespace model

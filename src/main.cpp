@@ -90,9 +90,6 @@ int main()
         world_matrix = glm::translate(world_matrix, glm::vec3(0, -0.4, -0.1));
         world_matrix = glm::scale(world_matrix, glm::vec3(human_with_skeleton.scale));
 
-        // auto gizmo_world_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, -0.4, -0.1));
-        // gizmo_world_matrix = glm::scale(gizmo_world_matrix, glm::vec3(human_with_skeleton.scale));
-
         shader.apply();
         shader.setUniformMatrix4fv("world", world_matrix);
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
@@ -102,75 +99,86 @@ int main()
         gizmo_shader.setUniformMatrix4fv("world", world_matrix);
         gizmo_shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         auto current_clock = std::chrono::high_resolution_clock().now();
-        // std::time(& current_clock);
-        delta_frame_time = double(std::chrono::duration_cast<std::chrono::nanoseconds>(current_clock - last_clock).count()) * 1e-9;
 
-        last_clock = current_clock;
+        auto update_time_and_logic = [&]() -> void {
+            delta_frame_time = double(std::chrono::duration_cast<std::chrono::nanoseconds>(current_clock - last_clock).count()) * 1e-9;
 
-        fps++;
-        fps_sec += delta_frame_time;
-        if (fps_sec >= 1.0f) {
-            fps_sec = 0.0f;
-            final_fps = fps;
-            fps = 0;
-        }
-        if (! human_with_skeleton.import_animation) {
+            last_clock = current_clock;
 
-            shader.apply();
-            human_with_skeleton.draw();
-            return;
-        }
-
-        if (human_with_skeleton.speed > 0.0f) {
-            // time += delta_frame_time;
-            speed = human_with_skeleton.speed;
-        }
-
-        auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
-
-        auto frame_time{1.0f / speed / track.frame_per_second};
-
-        for (auto id = 0; id < frame_ids.size(); id++) {
-            auto& frame_id = frame_ids[id];
-            if (frame_id >= human_with_skeleton.tracks[id].duration) {
-                frame_id = 0;
-                weight_right_frame = 0.0f;
+            fps++;
+            fps_sec += delta_frame_time;
+            if (fps_sec >= 1.0f) {
+                fps_sec = 0.0f;
+                final_fps = fps;
+                fps = 0;
             }
-        }
+            if (! human_with_skeleton.import_animation) {
 
-        if (human_with_skeleton.speed > 0.0f) {
-            weight_right_frame += delta_frame_time / frame_time;
-            weight_left_frame = 1.0f - weight_right_frame;
-        }
+                shader.apply();
+                human_with_skeleton.draw();
+                return;
+            }
 
-        if (!show_blend_space) {
-            for (auto i = 0; i < blend_weights.size(); i++) {
-                if (i == human_with_skeleton.play_anim_track) {
-                    blend_weights[i] = 1.0f;
-                } else {
-                    blend_weights[i] = 0.0f;
+            if (human_with_skeleton.speed > 0.0f) {
+                // time += delta_frame_time;
+                speed = human_with_skeleton.speed;
+            }
+
+            auto& track = human_with_skeleton.tracks[human_with_skeleton.play_anim_track];
+
+            auto frame_time{1.0f / speed / track.frame_per_second};
+
+            for (auto id = 0; id < frame_ids.size(); id++) {
+                auto& frame_id = frame_ids[id];
+                if (frame_id >= human_with_skeleton.tracks[id].duration) {
+                    frame_id = 0;
+                    weight_right_frame = 0.0f;
                 }
             }
-        }
+
+            if (human_with_skeleton.speed > 0.0f) {
+                weight_right_frame += delta_frame_time / frame_time;
+                weight_left_frame = 1.0f - weight_right_frame;
+            }
+
+            if (!show_blend_space) {
+                for (auto i = 0; i < blend_weights.size(); i++) {
+                    if (i == human_with_skeleton.play_anim_track) {
+                        blend_weights[i] = 1.0f;
+                    } else {
+                        blend_weights[i] = 0.0f;
+                    }
+                }
+            }
+        };
+
+        update_time_and_logic();
+
+        auto update_animation = [&]() -> void {
+            human_with_skeleton.blend_tracks(frame_ids, weight_left_frame, weight_right_frame, blend_weights);
+            human_with_skeleton.bind_textures();
+        };
+
+        update_animation();
 
         shader.apply();
         shader.setUniform1b("import_animation", human_with_skeleton.import_animation);
-        shader.setUniform1iv("frame_ids", 3, frame_ids.data());
-        shader.setUniform1f("left_weight", weight_left_frame);
-        shader.setUniform1f("right_weight", weight_right_frame);
+        // shader.setUniform1iv("frame_ids", 3, frame_ids.data());
+        // shader.setUniform1f("left_weight", weight_left_frame);
+        // shader.setUniform1f("right_weight", weight_right_frame);
 
-        shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
-        shader.setUniform1i("blend_anim_num", 3);
-        shader.setUniform1fv("blend_weights", 3, blend_weights.data());
-        shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
+        shader.setUniform1i("bone_current_pose", 2);
+        // shader.setUniform1i("blend_anim_num", 3);
+        // shader.setUniform1fv("blend_weights", 3, blend_weights.data());
+        // shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
         gizmo_shader.apply();
-        gizmo_shader.setUniform1iv("frame_ids", 3, frame_ids.data());
-        gizmo_shader.setUniform1f("left_weight", weight_left_frame);
-        gizmo_shader.setUniform1f("right_weight", weight_right_frame);
-        gizmo_shader.setUniform1iv("bone_current_poses", human_with_skeleton.tracks.size(), track_tex_id.data());
-        gizmo_shader.setUniform1i("blend_anim_num", 3);
-        gizmo_shader.setUniform1fv("blend_weights", 3, blend_weights.data());
+        // gizmo_shader.setUniform1iv("frame_ids", 3, frame_ids.data());
+        // gizmo_shader.setUniform1f("left_weight", weight_left_frame);
+        // gizmo_shader.setUniform1f("right_weight", weight_right_frame);
+        gizmo_shader.setUniform1i("bone_current_pose", 2);
+        // gizmo_shader.setUniform1i("blend_anim_num", 3);
+        // gizmo_shader.setUniform1fv("blend_weights", 3, blend_weights.data());
         gizmo_shader.setUniform4fv("gizmo_color", bone_gizmo_color);
         gizmo_shader.setUniform1f("gizmo_scale", gizmo_model.scale);
 
@@ -329,11 +337,15 @@ int main()
                 ImGui::Render();
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             };
-            draw_imgui();
-            glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
-            projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(render::window::SCR_WIDTH), float(render::window::SCR_HEIGHT), 0.1f, 10.0f);
-            glViewport(0, 0, render::window::SCR_WIDTH, render::window::SCR_HEIGHT);
+            
+            auto update_camera = [&]() -> void  {
+                glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
+                projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(render::window::SCR_WIDTH), float(render::window::SCR_HEIGHT), 0.1f, 10.0f);
+                glViewport(0, 0, render::window::SCR_WIDTH, render::window::SCR_HEIGHT);
+            };
 
+            draw_imgui();
+            update_camera();
             display();
 
             // assert(false);
