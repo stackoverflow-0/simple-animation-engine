@@ -471,8 +471,8 @@ namespace assimp_model
         {
             tmp_anim_pose_frames[i] = get_world_transform(i);
         }
-        // if (track_anim_texture == 0)
-        glGenTextures(1, &track_anim_texture);
+        if (track_anim_texture == 0)
+            glGenTextures(1, &track_anim_texture);
 
         // glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, track_anim_texture);

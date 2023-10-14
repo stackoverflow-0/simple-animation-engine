@@ -170,7 +170,7 @@ int main()
         shader.setUniform1i("bone_current_pose", 2);
         // shader.setUniform1i("blend_anim_num", 3);
         // shader.setUniform1fv("blend_weights", 3, blend_weights.data());
-        // shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
+        shader.setUniform1i("show_bone_weight_id", human_with_skeleton.show_bone_weight_id);
 
         gizmo_shader.apply();
         // gizmo_shader.setUniform1iv("frame_ids", 3, frame_ids.data());

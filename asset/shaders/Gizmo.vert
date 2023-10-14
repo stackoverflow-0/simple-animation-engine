@@ -16,14 +16,8 @@ uniform mat4 viewProj;
 // uniform sampler2D bone_bind_pose;
 
 uniform sampler2D bone_current_pose;
-uniform int frame_ids[3];
 
 uniform int blend_anim_num;
-
-uniform float left_weight;
-uniform float right_weight;
-
-uniform float blend_weights[3];
 
 uniform int bone_id;
 
