@@ -75,7 +75,7 @@ namespace assimp_model
         std::vector<Vertex> vertices{};
         std::vector<unsigned int> indices{};
         std::vector<glm::vec2> bone_id_and_weight{};
-        
+
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
         {
             this->vertices = vertices;
@@ -137,7 +137,7 @@ namespace assimp_model
 
         auto create_bind_pose_matrix_texure() -> void;
 
-        auto create_anim_matrix_texure(std::vector<int>& frame_id, float left_weight, float right_weight, std::vector<float>& weights) -> void;
+        auto create_anim_matrix_texure(std::vector<int>& frame_id, std::vector<int>& track_id, float left_weight, float right_weight, std::vector<float>& weights) -> void;
 
         auto bind_textures() -> void;
 
@@ -151,11 +151,11 @@ namespace assimp_model
                 // }
                 bind_textures();
             }
-            
+
         }
 
-        auto blend_tracks(std::vector<int>& frame_id, float left_weight, float right_weight,std::vector<float>& weights) {
-            create_anim_matrix_texure(frame_id, left_weight, right_weight, weights);
+        auto blend_tracks(std::vector<int>& frame_id, std::vector<int>& track_id,float left_weight, float right_weight,std::vector<float>& weights) {
+            create_anim_matrix_texure(frame_id, track_id, left_weight, right_weight, weights);
         }
     };
 } // namespace mesh

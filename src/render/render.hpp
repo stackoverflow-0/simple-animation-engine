@@ -6,7 +6,9 @@
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+    #define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 #include <imgui.h>
 #include <imgui_internal.h>
 // #include <imgui_stdlib.h>

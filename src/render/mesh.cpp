@@ -69,7 +69,7 @@ namespace assimp_model
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, bone_weight_offset));
         glBindVertexArray(0);
-        
+
         if (import_animation) {
             glGenTextures(1, &bone_weight_texture);
 
@@ -136,7 +136,7 @@ namespace assimp_model
                 {
                     auto bone_node = bone_to_be_walk.front();
                     bone_to_be_walk.pop();
-                    
+
                     std::string bone_name = bone_node->mName.C_Str();
                     std::string parent_name{};
                     int parent_id{-1};
@@ -148,17 +148,17 @@ namespace assimp_model
                         while (!bone_to_be_walk.empty())
                             bone_to_be_walk.pop();
                     }
-                    
+
                     if (find_skeleton_root) {
                         bone_name_to_id.emplace(bone_name, bone_name_to_id.size());
-                        
+
                         parent_name = bone_node->mParent->mName.C_Str();
                         bones.emplace_back();
                         if (! is_skeleton_root) {
-                            
+
                             parent_id = bone_name_to_id.at(parent_name);
                         }
-                            
+
                         is_skeleton_root = false;
                     }
 
@@ -184,7 +184,7 @@ namespace assimp_model
             if (scene->HasAnimations())
             {
                 auto anim_num = scene->mNumAnimations;
-                
+
                 tracks.resize(anim_num);
 
                 std::cout << std::format("anim count {:d}\n", anim_num);
@@ -234,9 +234,9 @@ namespace assimp_model
                             channel.positions[key_id] = glm::vec3(trans.x, trans.y, trans.z);
                             channel.rotations[key_id] = glm::quat(rot.w, rot.x, rot.y, rot.z);
                             channel.scales[key_id] = glm::vec3(scale.x, scale.y, scale.z);
-                            
-                            // channel.trans_matrix[key_id] = 
-                            //     glm::translate(glm::mat4x4(1.0f), glm::vec3(trans.x, trans.y, trans.z)) 
+
+                            // channel.trans_matrix[key_id] =
+                            //     glm::translate(glm::mat4x4(1.0f), glm::vec3(trans.x, trans.y, trans.z))
                             //     * glm::scale(glm::mat4x4(1.0f), glm::vec3(scale.x, scale.y, scale.z))
                             //     * glm::toMat4(glm::quat(rot.w, rot.x, rot.y, rot.z)) ;
 
@@ -404,28 +404,30 @@ namespace assimp_model
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    auto Model::create_anim_matrix_texure(std::vector<int>& frame_ids, float left_weight, float right_weight, std::vector<float>& weights) -> void
+    auto Model::create_anim_matrix_texure(std::vector<int>& frame_ids, std::vector<int>& track_id, float left_weight, float right_weight, std::vector<float>& weights) -> void
     {
         // assert(track_index < tracks.size());
         auto bone_num = bone_name_to_id.size();
         // auto &track_anim_texture = tracks[track_index].track_anim_texture;
         auto current_frame = std::vector<Bone_Trans>{};
         current_frame.resize(bone_num);
-        
+
         for (int i = 0; i < bone_num; i++) {
             auto trans = glm::vec3{};
             auto rotation = std::vector<glm::quat>{};
             auto scale = glm::vec3{};
 
             for (int j = 0; j < weights.size(); j++) {
-                auto& trans_l = tracks[j].channels[i].positions[frame_ids[j]    ];
-                auto& trans_r = tracks[j].channels[i].positions[frame_ids[j] + 1];
+                auto& channel = tracks[track_id[j]].channels[i];
+                auto& frame_id = frame_ids[track_id[j]];
+                auto& trans_l = channel.positions[frame_id    ];
+                auto& trans_r = channel.positions[frame_id + 1];
 
-                auto& rotation_l = tracks[j].channels[i].rotations[frame_ids[j]    ];
-                auto& rotation_r = tracks[j].channels[i].rotations[frame_ids[j] + 1];
+                auto& rotation_l = channel.rotations[frame_id    ];
+                auto& rotation_r = channel.rotations[frame_id + 1];
 
-                auto& scale_l = tracks[j].channels[i].scales[frame_ids[j]    ];
-                auto& scale_r = tracks[j].channels[i].scales[frame_ids[j] + 1];
+                auto& scale_l = channel.scales[frame_id    ];
+                auto& scale_r = channel.scales[frame_id + 1];
 
                 trans += weights[j] * (left_weight * trans_l + right_weight * trans_r);
                 rotation.emplace_back((glm::slerp(rotation_l, rotation_r, right_weight)));
@@ -437,7 +439,7 @@ namespace assimp_model
             current_frame[i].rotation = glm::slerp(tmp_quat, rotation[2], weights[2] / (weights[0] + weights[1] + weights[2]));
             current_frame[i].scale = scale;
         }
-        
+
         // auto channel_num = channels.size();
 
         std::vector<glm::mat4x4> tmp_anim_pose_frames{};
@@ -500,7 +502,7 @@ namespace assimp_model
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, track_anim_texture);
 
-        
+
         // auto track_index{0};
         // for (auto &track : tracks)
         // {

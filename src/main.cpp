@@ -1,6 +1,6 @@
 #include "render/mesh.hpp"
 #include "render/render.hpp"
-
+#include "render/animation.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <thread>
@@ -49,8 +49,8 @@ int main()
 
     auto time{0.0f};
     auto last_clock = std::chrono::high_resolution_clock().now();
-    auto frame_ids = std::vector<int>{};
-    frame_ids.resize(human_with_skeleton.tracks.size());
+    // auto frame_ids = std::vector<int>{};
+    // frame_ids.resize(human_with_skeleton.tracks.size());
 
     auto blend_weights = std::vector<float>{1.0f, 0.0f, 0.0f};
     auto track_tex_id = std::vector<int>{};
@@ -77,10 +77,14 @@ int main()
 
     auto slider2d_pos = ImVec2(0, 0);
 
-    auto anim_blendspace_pos = std::vector<ImVec2>{};
-    anim_blendspace_pos.emplace_back(0.0f , 0.0f);
-    anim_blendspace_pos.emplace_back(0.5f , 0.0f);
-    anim_blendspace_pos.emplace_back(0.0f , 0.5f);
+    // auto anim_blendspace_pos = std::vector<ImVec2>{};
+    // anim_blendspace_pos.emplace_back(0.0f , 0.0f);
+    // anim_blendspace_pos.emplace_back(0.5f , 0.0f);
+    // anim_blendspace_pos.emplace_back(0.0f , 0.5f);
+
+    Blendspace2D::Blend_Space_2D blend_space{};
+    blend_space.init(human_with_skeleton, "asset/blend-space.json");
+
 
     auto display = [&]()
     {
@@ -128,35 +132,34 @@ int main()
 
             auto frame_time{1.0f / speed / track.frame_per_second};
 
-            for (auto id = 0; id < frame_ids.size(); id++) {
-                auto& frame_id = frame_ids[id];
-                if (frame_id >= human_with_skeleton.tracks[id].duration) {
-                    frame_id = 0;
-                    weight_right_frame = 0.0f;
-                }
-            }
+            // for (auto id = 0; id < frame_ids.size(); id++) {
+            //     auto& frame_id = frame_ids[id];
+            //     if (frame_id >= human_with_skeleton.tracks[id].duration) {
+            //         frame_id = 0;
+            //         // weight_right_frame = 0.0f;
+            //     }
+            // }
 
             if (human_with_skeleton.speed > 0.0f) {
                 weight_right_frame += delta_frame_time / frame_time;
                 weight_left_frame = 1.0f - weight_right_frame;
             }
 
-            if (!show_blend_space) {
-                for (auto i = 0; i < blend_weights.size(); i++) {
-                    if (i == human_with_skeleton.play_anim_track) {
-                        blend_weights[i] = 1.0f;
-                    } else {
-                        blend_weights[i] = 0.0f;
-                    }
-                }
-            }
+            // if (!show_blend_space) {
+            //     for (auto i = 0; i < blend_weights.size(); i++) {
+            //         if (i == human_with_skeleton.play_anim_track) {
+            //             blend_weights[i] = 1.0f;
+            //         } else {
+            //             blend_weights[i] = 0.0f;
+            //         }
+            //     }
+            // }
         };
 
         update_time_and_logic();
 
         auto update_animation = [&]() -> void {
-            human_with_skeleton.blend_tracks(frame_ids, weight_left_frame, weight_right_frame, blend_weights);
-            human_with_skeleton.bind_textures();
+            blend_space.update(human_with_skeleton, glm::vec2(slider2d_pos.x, slider2d_pos.y), weight_left_frame, weight_right_frame);
         };
 
         update_animation();
@@ -199,12 +202,12 @@ int main()
             glEnable(GL_DEPTH_TEST);
         }
 
-        if ( weight_right_frame >= 1.0f) {
-            for (auto& frame_id: frame_ids) {
-                frame_id++;
-            }
-            weight_right_frame = 0.0f;
-        }
+        // if ( weight_right_frame >= 1.0f) {
+        //     // for (auto& frame_id: frame_ids) {
+        //     //     frame_id++;
+        //     // }
+        //     weight_right_frame = 0.0f;
+        // }
     };
 
     auto run = [&]()
@@ -252,65 +255,35 @@ int main()
                         auto component_width = 0.7f * (ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x);
                         auto componect_pos = ImGui::GetCursorScreenPos();
                         auto component_rect = ImRect(componect_pos, ImVec2(component_width, component_width) + componect_pos);
-
-                        auto p0 = (anim_blendspace_pos[0] + ImVec2(0.5f, 0.5f)) * component_width;
-                        p0.y = - p0.y + component_width;
-                        p0 += component_rect.Min;
-                        auto p1 = (anim_blendspace_pos[1] + ImVec2(0.5f, 0.5f)) * component_width;
-                        p1.y = - p1.y + component_width;
-                        p1 += component_rect.Min;
-                        auto p2 = (anim_blendspace_pos[2] + ImVec2(0.5f, 0.5f)) * component_width;
-                        p2.y = - p2.y + component_width;
-                        p2 += component_rect.Min;
-
-                        ImGui::GetForegroundDrawList()->AddLine(p0, p1, IM_COL32(255, 255, 255, 255), 3.0f);
-                        ImGui::GetForegroundDrawList()->AddLine(p1, p2, IM_COL32(255, 255, 255, 255), 3.0f);
-                        ImGui::GetForegroundDrawList()->AddLine(p2, p0, IM_COL32(255, 255, 255, 255), 3.0f);
-                        ImGui::GetForegroundDrawList()->AddCircleFilled(p0, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
-                        ImGui::GetForegroundDrawList()->AddCircleFilled(p1, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
-                        ImGui::GetForegroundDrawList()->AddCircleFilled(p2, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
-                        
                         ImGui::GetForegroundDrawList()->AddRect(component_rect.Min, component_rect.Max, IM_COL32(0, 0, 255, 255), 0.0f, 0, 3.0f);
+
+                        for (auto& t: blend_space.triangles) {
+                            auto p0 = (ImVec2(t.p0.position.x, t.p0.position.y) / 2.0f + ImVec2(0.5f, 0.5f)) * component_width;
+                            p0.y = - p0.y + component_width;
+                            p0 += component_rect.Min;
+                            auto p1 = (ImVec2(t.p1.position.x, t.p1.position.y) / 2.0f + ImVec2(0.5f, 0.5f)) * component_width;
+                            p1.y = - p1.y + component_width;
+                            p1 += component_rect.Min;
+                            auto p2 = (ImVec2(t.p2.position.x, t.p2.position.y) / 2.0f + ImVec2(0.5f, 0.5f)) * component_width;
+                            p2.y = - p2.y + component_width;
+                            p2 += component_rect.Min;
+
+                            ImGui::GetForegroundDrawList()->AddLine(p0, p1, IM_COL32(255, 255, 255, 255), 3.0f);
+                            ImGui::GetForegroundDrawList()->AddLine(p1, p2, IM_COL32(255, 255, 255, 255), 3.0f);
+                            ImGui::GetForegroundDrawList()->AddLine(p2, p0, IM_COL32(255, 255, 255, 255), 3.0f);
+                            ImGui::GetForegroundDrawList()->AddCircleFilled(p0, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
+                            ImGui::GetForegroundDrawList()->AddCircleFilled(p1, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
+                            ImGui::GetForegroundDrawList()->AddCircleFilled(p2, 1.5f, IM_COL32( 0, 255, 255, 255 ), 0);
+                        }
 
                         if (ImGui::IsMouseHoveringRect(component_rect.Min, component_rect.Max) && ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
                             auto cur_pos = ImGui::GetMousePos();
-                            auto tmp_slider2d_pos = (cur_pos - component_rect.GetCenter()) / component_width;
+                            auto tmp_slider2d_pos = (cur_pos - component_rect.GetCenter()) / component_width * 2.0f;
                             tmp_slider2d_pos.y = - tmp_slider2d_pos.y;
-                            // auto weight = glm::inverse(glm::mat3x3{
-                            //     anim_blendspace_pos[0].x, anim_blendspace_pos[0].y, 1.0f,
-                            //     anim_blendspace_pos[1].x, anim_blendspace_pos[1].y, 1.0f,
-                            //     anim_blendspace_pos[2].x, anim_blendspace_pos[2].y, 1.0f}
-                            // ) * glm::vec3(tmp_slider2d_pos.x, tmp_slider2d_pos.y, 1.0f);
-
-                            // auto weight_x = weight.x;
-                            // auto weight_y = weight.y;
-                            // auto weight_z = weight.z;
-
-                            auto& pa = anim_blendspace_pos[0];
-                            auto& pb = anim_blendspace_pos[1];
-                            auto& pc = anim_blendspace_pos[2];
-                            auto weight_x = (- (tmp_slider2d_pos.x - pb.x) * (pc.y - pb.y) + (tmp_slider2d_pos.y - pb.y) * (pc.x - pb.x))
-                                            / (- (pa.x - pb.x) * (pc.y - pb.y) + (pa.y - pb.y) * (pc.x - pb.x));
-
-                            auto weight_y = (- (tmp_slider2d_pos.x - pc.x) * (pa.y - pc.y) + (tmp_slider2d_pos.y - pc.y) * (pa.x - pc.x))
-                                            / (- (pb.x - pc.x) * (pa.y - pc.y) + (pb.y - pc.y) * (pa.x - pc.x));
-
-                            auto weight_z = 1.0f - weight_x - weight_y;
-                            if (weight_x >= 0.0f && weight_y >= 0.0f && weight_z >= 0.0f) {
-                                constexpr auto hold_val = 0.01f;
-                                if (weight_x < hold_val)
-                                    weight_x = 0.0f;
-                                if (weight_y < hold_val)
-                                    weight_y = 0.0f;
-                                if (weight_z < hold_val)
-                                    weight_z = 0.0f;
-                                blend_weights[0] = weight_x > 0.0f ? weight_x : 0.0f;
-                                blend_weights[1] = weight_y > 0.0f ? weight_y : 0.0f;
-                                blend_weights[2] = weight_z > 0.0f ? weight_z : 0.0f;
-                                slider2d_pos = tmp_slider2d_pos;
-                            }
+                            // blend_space.update(human_with_skeleton, glm::vec2(tmp_slider2d_pos.x, tmp_slider2d_pos.y), weight_left_frame, weight_right_frame);
+                            slider2d_pos = tmp_slider2d_pos;
                         }
-                        auto cur_pos_ref = (slider2d_pos + ImVec2(0.5f, 0.5f)) * component_width;
+                        auto cur_pos_ref = (slider2d_pos / 2.0f + ImVec2(0.5f, 0.5f)) * component_width;
                         cur_pos_ref.y = - cur_pos_ref.y + component_width;
                         cur_pos_ref += component_rect.Min;
 
@@ -322,7 +295,13 @@ int main()
                         ImGui::PopID();
                         ImGui::Dummy(ImVec2(component_width, component_width));
                         // assert(false);
-                        ImGui::Text("blend weight\nanim0 - %.2f\nanim1 - %.2f\nanim2 - %.2f\n", blend_weights[0], blend_weights[1], blend_weights[2]);
+                        ImGui::Text("blend position x %.2f - y %.2f\n", blend_space.position.x, blend_space.position.y);
+                        ImGui::Text(
+                            "blend weight\nanim%d - %.2f\nanim%d - %.2f\nanim%d - %.2f\n",
+                            blend_space.track_ids[0], blend_space.blend_weight[0],
+                            blend_space.track_ids[1], blend_space.blend_weight[1],
+                            blend_space.track_ids[2], blend_space.blend_weight[2]
+                        );
                     }
 
                     ImGui::Checkbox("show bone gizmo", &show_bone_gizmo);
@@ -337,7 +316,7 @@ int main()
                 ImGui::Render();
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             };
-            
+
             auto update_camera = [&]() -> void  {
                 glfwGetFramebufferSize(render::window::window, &render::window::SCR_WIDTH, &render::window::SCR_HEIGHT);
                 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(render::window::SCR_WIDTH), float(render::window::SCR_HEIGHT), 0.1f, 10.0f);
