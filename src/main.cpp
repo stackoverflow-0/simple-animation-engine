@@ -159,6 +159,7 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 0);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
+        glEnable(GL_MULTISAMPLE); 
         glCullFace(GL_BACK);
         auto human_with_skeleton_config_scale = human_with_skeleton.scale;
         auto gizmo_model_config_scale = gizmo_model.scale;

@@ -311,6 +311,7 @@ namespace window{
         glfwSetErrorCallback(window::glfwErrorCallback);
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
         glfwWindowHint(GLFW_CONTEXT_ROBUSTNESS, GLFW_LOSE_CONTEXT_ON_RESET);
+        glfwWindowHint(GLFW_SAMPLES, 16);
         window::window = glfwCreateWindow(1024, 768, "Skeleton Animation App", NULL, NULL);
         if (window::window != nullptr) {
 
