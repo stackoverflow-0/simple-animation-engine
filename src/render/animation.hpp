@@ -43,12 +43,16 @@ namespace Blendspace2D
         Node p2{};
 
         auto get_weight(glm::vec2 p) -> glm::vec3;
+
+        auto inside_triangle(glm::vec2& p) -> bool;
         // glm::vec3 z -> radius , x / y = center coordinate x / y
         auto get_circumscribed_circle() -> glm::vec3;
 
         auto share_edge_with(Triangle& t) -> bool;
 
         auto in_triangle(Node& n) -> bool;
+
+        auto is_convex_with(Triangle& t) -> bool;
 
 
     };

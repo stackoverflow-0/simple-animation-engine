@@ -22,6 +22,11 @@ namespace Blendspace2D
         return glm::vec3{weight_x, weight_y, weight_z};
     }
 
+    auto Triangle::inside_triangle(glm::vec2& p) -> bool {
+        auto w = get_weight(p);
+        return w.x >= 0.0f && w.y >= 0.0f && w.z >= 0.0f;
+    }
+
     auto Triangle::get_circumscribed_circle() -> glm::vec3 {
         auto a = glm::distance(p0.position, p1.position);
         auto b = glm::distance(p2.position, p0.position);
@@ -42,6 +47,23 @@ namespace Blendspace2D
         if (in_triangle(t.p2))
             cnt++;
         return cnt >= 2 ;
+    }
+
+    auto Triangle::is_convex_with(Triangle& t) -> bool {
+        if (!share_edge_with(t)) {
+            return false;
+        }
+        auto& poly_p0 = p0;
+        auto& poly_p1 = p1;
+        auto& poly_p2 = p2;
+        auto& poly_p3 = !in_triangle(t.p0) ? t.p0 : !in_triangle(t.p1) ? t.p1 : t.p2;
+
+        auto in_poly0 = Triangle{poly_p3, poly_p1, poly_p2}.inside_triangle(poly_p0.position);
+        auto in_poly1 = Triangle{poly_p0, poly_p3, poly_p2}.inside_triangle(poly_p1.position);
+        auto in_poly2 = Triangle{poly_p0, poly_p1, poly_p3}.inside_triangle(poly_p2.position);
+        auto in_poly3 = Triangle{poly_p0, poly_p1, poly_p2}.inside_triangle(poly_p3.position);
+
+        return in_poly0 || in_poly1 || in_poly2 || in_poly3;
     }
 
     auto Triangle::in_triangle(Node& n) -> bool {
@@ -104,11 +126,16 @@ namespace Blendspace2D
 
             for (auto& n: tmp_nodes) {
                 auto star_poly = std::vector<Node>{};
+                auto in_star_poly{false};
                 for (auto it = triangles.begin(); it != triangles.end();) {
                     auto& triangle = *it;
                     auto info = triangle.get_circumscribed_circle();
                     auto center = glm::vec2{info.x, info.y};
-                    if (glm::distance(n.position, center) <= info.z - 0.0001) {
+                    if (glm::distance(n.position, center) < info.z - 0.001) {
+                        auto w = triangle.get_weight(n.position);
+                        if (w.x >= 0.0f && w.y >= 0.0f && w.z >= 0.0f) {
+                            in_star_poly = true;
+                        }
                         auto p0_exist{false};
                         auto p1_exist{false};
                         auto p2_exist{false};
@@ -138,7 +165,7 @@ namespace Blendspace2D
                 }
 
                 auto angle_greater = [&](auto& p1, auto& p2) -> bool {
-                    return glm::orientedAngle(p1.position - n.position, glm::vec2{}) > glm::orientedAngle(p2.position - n.position, glm::vec2{});
+                    return glm::orientedAngle(glm::normalize(p1.position - n.position), glm::vec2{1.0f, 0.0f}) > glm::orientedAngle(glm::normalize(p2.position - n.position), glm::vec2{1.0f, 0.0f});
                 };
 
                 if (!star_poly.empty()) {
@@ -150,7 +177,8 @@ namespace Blendspace2D
                     for (auto i = 0; i < star_poly.size() - 1; i++) {
                         triangles.emplace_back(n, star_poly[i], star_poly[i + 1]);
                     }
-                    triangles.emplace_back(n, star_poly[star_poly.size() - 1], star_poly[0]);
+                    if (in_star_poly)
+                        triangles.emplace_back(n, star_poly[star_poly.size() - 1], star_poly[0]);
                 }
             }
             auto triangles_to_be_remove = std::vector<Triangle>{};
@@ -168,23 +196,27 @@ namespace Blendspace2D
                 auto& t = *it;
                 for (auto it_ = it; it_ != triangles_to_be_remove.end(); it_++) {
                     auto t_ = *it_;
-                    if (t.share_edge_with(t_)) {
+
+                    if (t.share_edge_with(t_) && !t.is_convex_with(t_)) {
+                        auto convex_polygon = Triangle{};
                         std::unordered_set<Node, Node_Hash> uset;
                         std::vector<Node> uvec{};
-                        if (t.p0.track_id != -1)
+                        // if (t.p0.track_id != -1)
                             uset.emplace(t.p0);
-                        if (t.p1.track_id != -1)
+                        // if (t.p1.track_id != -1)
                             uset.emplace(t.p1);
-                        if (t.p2.track_id != -1)
+                        // if (t.p2.track_id != -1)
                             uset.emplace(t.p2);
-                        if (t_.p0.track_id != -1)
+                        // if (t_.p0.track_id != -1)
                             uset.emplace(t_.p0);
-                        if (t_.p1.track_id != -1)
+                        // if (t_.p1.track_id != -1)
                             uset.emplace(t_.p1);
-                        if (t_.p2.track_id != -1)
+                        // if (t_.p2.track_id != -1)
                             uset.emplace(t_.p2);
+
                         for (auto& p: uset) {
-                            uvec.emplace_back(p);
+                            if (p.track_id != -1)
+                                uvec.emplace_back(p);
                         }
                         if (uvec.size() == 3)
                             triangles.emplace_back(uvec[0], uvec[1], uvec[2]);
