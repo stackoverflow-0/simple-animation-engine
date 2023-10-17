@@ -1,5 +1,5 @@
 {
-    "model_path": "asset/models/ue-human.fbx",
+    "model_path": "asset/models/simple-human.fbx",
     "import_animation": true,
     "scale": 0.02,
     "skeleton_root": "root",
