@@ -178,8 +178,8 @@ int main()
                     ImGui::SliderFloat("speed", &human_with_skeleton.speed, 0.0f, 2.0f);
                     ImGui::SliderFloat("scale", &human_with_skeleton.scale, 0.0f, human_with_skeleton_config_scale * 2.0f);
                     if (!show_blend_space) {
-                        ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
-                        ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
+                        // ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
+                        // ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
                     }
 
                     if (human_with_skeleton.show_bone_weight_id >= 0)
