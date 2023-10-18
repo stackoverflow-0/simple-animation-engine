@@ -260,47 +260,48 @@ namespace render
         }
     }
 
-namespace window{
-    GLFWwindow* window{nullptr};
+    namespace window{
+        GLFWwindow* window{nullptr};
 
-    glm::vec3 cam_position = glm::vec3(0.0f, 0.0f, 5.0f);
-    glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 cam_position = glm::vec3(0.0f, 0.0f, 5.0f);
+        glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    int SCR_WIDTH = 1024;
-    int SCR_HEIGHT = 768;
+        int SCR_WIDTH = 1024;
+        int SCR_HEIGHT = 768;
 
-    double xpos_old{};
-    double ypos_old{};
+        double xpos_old{};
+        double ypos_old{};
 
-    float yaw{};
-    float pitch{};
+        float yaw{};
+        float pitch{};
 
-    void mouse_callback(GLFWwindow *window, double xpos, double ypos)
-    {
-        if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS) {
+        void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+        {
+            if (glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS) {
+                xpos_old = xpos;
+                ypos_old = ypos;
+                return;
+            }
+
+            yaw   += (( xpos - xpos_old) / float(SCR_WIDTH)) * 3.14;
+            pitch += ((-ypos + ypos_old) / float(SCR_HEIGHT)) * 3.14;
+
             xpos_old = xpos;
             ypos_old = ypos;
+
+            glm::vec3 direction;
+            direction.x = sin(yaw) * cos(pitch);
+            direction.y = sin(pitch);
+            direction.z = -cos(yaw) * cos(pitch);
+            cam_position = -5.0f * glm::normalize(direction);
+
+            auto _cam_position = -5.0f * glm::normalize(glm::vec3{sin(yaw) * cos(pitch - 0.1f), sin(pitch - 0.1f), -cos(yaw) * cos(pitch - 0.1f)});
+
+            cam_up = glm::normalize(_cam_position - cam_position);
             return;
         }
-
-        yaw   += (( xpos - xpos_old) / float(SCR_WIDTH)) * 3.14;
-        pitch += ((-ypos + ypos_old) / float(SCR_HEIGHT)) * 3.14;
-
-        xpos_old = xpos;
-        ypos_old = ypos;
-
-        glm::vec3 direction;
-        direction.x = sin(yaw) * cos(pitch);
-        direction.y = sin(pitch);
-        direction.z = -cos(yaw) * cos(pitch);
-        cam_position = -5.0f * glm::normalize(direction);
-
-        auto _cam_position = -5.0f * glm::normalize(glm::vec3{sin(yaw) * cos(pitch - 0.1f), sin(pitch - 0.1f), -cos(yaw) * cos(pitch - 0.1f)});
-
-        cam_up = glm::normalize(_cam_position - cam_position);
-        return;
-    }}
+    }
 
     auto setup_glfw3_and_imgui() -> bool
     {
