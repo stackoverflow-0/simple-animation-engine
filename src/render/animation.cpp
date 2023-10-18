@@ -72,9 +72,6 @@ namespace Blendspace2D
 
     auto Blend_Space_2D::init(assimp_model::Model& model, const std::string path) -> void {
         frame_ids.resize(model.tracks.size(), 0);
-        // for (auto& t: model.tracks) {
-        //     track_len.emplace_back(t.duration);
-        // }
 
         blend_weight.resize(3, 0);
         track_ids.resize(3, 0);
@@ -111,52 +108,26 @@ namespace Blendspace2D
         }
 
         auto delaunay_triangulation = [&]() -> void {
-            // auto p_max_max = Node{glm::vec2{max_x, max_y}, -1};
-            // auto p_max_min = Node{glm::vec2{max_x, min_y}, -1};
-            // auto p_min_max = Node{glm::vec2{min_x, max_y}, -1};
-            // auto p_min_min = Node{glm::vec2{min_x, min_y}, -1};
-
-            auto p_max_max = Node{glm::vec2{1, 1}, -1};
-            auto p_max_min = Node{glm::vec2{1, -1}, -1};
-            auto p_min_max = Node{glm::vec2{-1, 1}, -1};
-            auto p_min_min = Node{glm::vec2{-1, -1}, -1};
+            auto p_max_max = Node{glm::vec2{max_x, max_y}, -1};
+            auto p_max_min = Node{glm::vec2{max_x, min_y}, -1};
+            auto p_min_max = Node{glm::vec2{min_x, max_y}, -1};
+            auto p_min_min = Node{glm::vec2{min_x, min_y}, -1};
 
             triangles.emplace_back(p_max_max, p_min_max, p_min_min);
             triangles.emplace_back(p_max_max, p_max_min, p_min_min);
 
             for (auto& n: tmp_nodes) {
                 auto star_poly = std::vector<Node>{};
-                auto in_star_poly{false};
+                auto star_poly_point_set = std::unordered_set<Node, Node_Hash>{};
+                // auto in_star_poly{false};
                 for (auto it = triangles.begin(); it != triangles.end();) {
                     auto& triangle = *it;
                     auto info = triangle.get_circumscribed_circle();
                     auto center = glm::vec2{info.x, info.y};
                     if (glm::distance(n.position, center) < info.z - 0.001) {
-                        auto w = triangle.get_weight(n.position);
-                        if (w.x >= 0.0f && w.y >= 0.0f && w.z >= 0.0f) {
-                            in_star_poly = true;
-                        }
-                        auto p0_exist{false};
-                        auto p1_exist{false};
-                        auto p2_exist{false};
-                        for (auto& p: star_poly) {
-                            if (p == triangle.p0) {
-                                p0_exist = true;
-                            }
-                            if (p == triangle.p1) {
-                                p1_exist = true;
-                            }
-                            if (p == triangle.p2) {
-                                p2_exist = true;
-                            }
-                        }
-
-                        if (!p0_exist)
-                            star_poly.emplace_back(triangle.p0);
-                        if (!p1_exist)
-                            star_poly.emplace_back(triangle.p1);
-                        if (!p2_exist)
-                            star_poly.emplace_back(triangle.p2);
+                        star_poly_point_set.emplace(triangle.p0);
+                        star_poly_point_set.emplace(triangle.p1);
+                        star_poly_point_set.emplace(triangle.p2);
 
                         it = triangles.erase(it);
                     } else {
@@ -168,7 +139,10 @@ namespace Blendspace2D
                     return glm::orientedAngle(glm::normalize(p1.position - n.position), glm::vec2{1.0f, 0.0f}) > glm::orientedAngle(glm::normalize(p2.position - n.position), glm::vec2{1.0f, 0.0f});
                 };
 
-                if (!star_poly.empty()) {
+                if (!star_poly_point_set.empty()) {
+                    for (auto& p: star_poly_point_set) {
+                        star_poly.emplace_back(p);
+                    }
                     std::sort(
                         star_poly.begin(),
                         star_poly.end(),
@@ -177,8 +151,8 @@ namespace Blendspace2D
                     for (auto i = 0; i < star_poly.size() - 1; i++) {
                         triangles.emplace_back(n, star_poly[i], star_poly[i + 1]);
                     }
-                    if (in_star_poly)
-                        triangles.emplace_back(n, star_poly[star_poly.size() - 1], star_poly[0]);
+                    // if (in_star_poly)
+                    triangles.emplace_back(n, star_poly.back(), star_poly.front());
                 }
             }
             auto triangles_to_be_remove = std::vector<Triangle>{};
@@ -201,18 +175,12 @@ namespace Blendspace2D
                         auto convex_polygon = Triangle{};
                         std::unordered_set<Node, Node_Hash> uset;
                         std::vector<Node> uvec{};
-                        // if (t.p0.track_id != -1)
-                            uset.emplace(t.p0);
-                        // if (t.p1.track_id != -1)
-                            uset.emplace(t.p1);
-                        // if (t.p2.track_id != -1)
-                            uset.emplace(t.p2);
-                        // if (t_.p0.track_id != -1)
-                            uset.emplace(t_.p0);
-                        // if (t_.p1.track_id != -1)
-                            uset.emplace(t_.p1);
-                        // if (t_.p2.track_id != -1)
-                            uset.emplace(t_.p2);
+                        uset.emplace(t.p0);
+                        uset.emplace(t.p1);
+                        uset.emplace(t.p2);
+                        uset.emplace(t_.p0);
+                        uset.emplace(t_.p1);
+                        uset.emplace(t_.p2);
 
                         for (auto& p: uset) {
                             if (p.track_id != -1)
@@ -230,7 +198,7 @@ namespace Blendspace2D
     }
 
     auto Blend_Space_2D::update(assimp_model::Model& model, glm::vec2 p, float& left_weight, float& right_weight) -> void {
-        position = p;
+        
         if (right_weight >= 1.0f) {
             for (auto i = 0; i < frame_ids.size(); i++) {
                 frame_ids[i]++;
@@ -243,15 +211,15 @@ namespace Blendspace2D
         }
 
         for (auto& triangle: triangles) {
-            auto w = triangle.get_weight(position);
+            auto w = triangle.get_weight(p);
             if (w.x >= 0.0f && w.y >= 0.0f && w.z >= 0.0f) {
+                position = p;
                 blend_weight[0] = w.x;
                 blend_weight[1] = w.y;
                 blend_weight[2] = w.z;
                 track_ids[0] = triangle.p0.track_id;
                 track_ids[1] = triangle.p1.track_id;
                 track_ids[2] = triangle.p2.track_id;
-                // in_blend_space = true;
                 break;
             }
         }

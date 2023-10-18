@@ -232,10 +232,15 @@ int main()
                         cur_pos_ref.y = - cur_pos_ref.y + component_width;
                         cur_pos_ref += component_rect.Min;
 
+                        auto bs_pos_ref = (ImVec2(blend_space.position.x, blend_space.position.y) / 2.0f + ImVec2(0.5f, 0.5f)) * component_width;
+                        bs_pos_ref.y = - bs_pos_ref.y + component_width;
+                        bs_pos_ref += component_rect.Min;
+
                         ImGui::GetForegroundDrawList()->AddLine(ImVec2(cur_pos_ref.x, component_rect.Min.y), ImVec2(cur_pos_ref.x, component_rect.Max.y), IM_COL32(100, 100, 100, 255), 3.0f);
                         ImGui::GetForegroundDrawList()->AddLine(ImVec2(component_rect.Min.x, cur_pos_ref.y), ImVec2(component_rect.Max.x, cur_pos_ref.y), IM_COL32(100, 100, 100, 255), 3.0f);
 
                         ImGui::GetForegroundDrawList()->AddCircleFilled(cur_pos_ref, 3.0f, IM_COL32( 255, 255, 0, 255 ), 0);
+                        ImGui::GetForegroundDrawList()->AddCircleFilled(bs_pos_ref, 3.0f, IM_COL32( 255, 255, 0, 255 ), 0);
 
                         ImGui::PopID();
                         ImGui::Dummy(ImVec2(component_width, component_width));

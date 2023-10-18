@@ -34,8 +34,6 @@ namespace render
                 std::stringstream shader_stream{};
                 shader_stream << inFile.rdbuf();
                 filetext = shader_stream.str();
-                // while (getline(inFile, line))
-                //     filetext.append(line + "\n");
                 inFile.close();
                 return filetext.insert(14, marco);
             }
@@ -301,7 +299,6 @@ namespace window{
         auto _cam_position = -5.0f * glm::normalize(glm::vec3{sin(yaw) * cos(pitch - 0.1f), sin(pitch - 0.1f), -cos(yaw) * cos(pitch - 0.1f)});
 
         cam_up = glm::normalize(_cam_position - cam_position);
-        // glfwSetCursorPos(window, SCR_WIDTH / 2, SCR_HEIGHT / 2);
         return;
     }}
 
@@ -320,58 +317,21 @@ namespace window{
 
             if (glewInit() != GLEW_OK)
                 throw std::runtime_error("glewInit failed");
-            // imgl3wInit();
-
+            
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
             ImGuiIO &io = ImGui::GetIO();
             // Setup Platform/Renderer bindings
-            // assert(ImGui_ImplGlfw_InitForOpenGL(render::window::window, true));
             if(ImGui_ImplGlfw_InitForOpenGL(render::window::window, true) != true) {
                 std::cout << "init glfw imgui failed\n";
-                // return false;
             }
-            // assert(ImGui_ImplOpenGL3_Init("#version 420"));
 
             if(ImGui_ImplOpenGL3_Init("#version 420") != true) {
-                // fprintf(stderr, "Failed to initialize OpenGL loader!\n");
                 std::cout << "init opengl3 imgui failed\n";
-                // return false;
             }
             // Setup Dear ImGui style
             ImGui::StyleColorsDark();
-            // return false;
 
-            // IMGUI_CHECKVERSION();
-            // ImGui::CreateContext();
-            // ImGuiIO& io = ImGui::GetIO(); (void)io;
-            // ImGui::StyleColorsDark();
-            // ImGui_ImplGlfw_InitForOpenGL(window::window, true);
-            // ImGui_ImplOpenGL3_Init("#version 150");
-
-            // while (!glfwWindowShouldClose(window::window))
-            // {
-            //     glClear(GL_COLOR_BUFFER_BIT);
-
-            //     ImGui_ImplOpenGL3_NewFrame();
-            //     ImGui_ImplGlfw_NewFrame();
-            //     ImGui::NewFrame();
-
-            //     ImGui::ShowDemoWindow();
-
-            //     ImGui::Render();
-            //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-            //     glfwSwapBuffers(window::window);
-            //     glfwPollEvents();
-            // }
-
-            // ImGui_ImplOpenGL3_Shutdown();
-            // ImGui_ImplGlfw_Shutdown();
-            // ImGui::DestroyContext();
-
-            // glfwDestroyWindow(window::window);
-            // glfwTerminate();
             return true;
         } else {
             return false;
