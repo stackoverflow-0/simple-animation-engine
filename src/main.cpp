@@ -1,6 +1,7 @@
 #include "render/mesh.hpp"
 #include "render/render.hpp"
 #include "render/animation.hpp"
+#include "render/group-animation.hpp"
 #include <stdio.h>
 #include <assert.h>
 #include <thread>
@@ -67,8 +68,13 @@ int main()
     Blendspace2D::Blend_Space_2D blend_space{};
     blend_space.init(human_with_skeleton, "asset/blend-space.json");
 
+    // Group_Animation::Flock flock{};
+    // flock.init();
+
     auto display = [&]()
     {
+
+
         auto view_matrix  = glm::lookAt(render::window::cam_position, render::window::cam_look_at, render::window::cam_up);
         auto world_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(-0.0f), glm::vec3(1, 0, 0));
         world_matrix = glm::rotate(world_matrix, glm::radians(0.0f), glm::vec3(0, 0, 1));
@@ -79,6 +85,16 @@ int main()
         shader.setUniformMatrix4fv("world", world_matrix);
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         shader.setUniform3fv("cam_pos", render::window::cam_position);
+
+        // flock.update(0.1f);
+        // flock.draw(shader);
+        // shader.apply();
+        // for (auto& boid: flock.boids) {
+        //     auto model_matrix = boid.get_affine_matrix();
+        //     shader.setUniformMatrix4fv("world", model_matrix);
+        //     shader.setUniform1i("import_animation", flock.boid_model.import_animation);
+        //     flock.boid_model.draw();
+        // }
 
         gizmo_shader.apply();
         gizmo_shader.setUniformMatrix4fv("world", world_matrix);
@@ -276,7 +292,7 @@ int main()
             draw_imgui();
             update_camera();
             display();
-            
+
         } while (render::window::swapAndPollInput());
     };
 
