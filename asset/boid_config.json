@@ -1,5 +1,8 @@
 {
     "model_path": "asset/models/ue-human.fbx",
-    "import_animation": false,
-    "scale": 0.01
+    "import_animation": true,
+    "scale": 0.001,
+    "skeleton_root": "root",
+    "play_anim_track": 0,
+    "speed": 1.0
 }

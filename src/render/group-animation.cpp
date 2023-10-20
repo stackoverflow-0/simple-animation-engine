@@ -1,5 +1,5 @@
 #include "group-animation.hpp"
-
+#include <format>
 
 namespace Group_Animation
 {
@@ -41,13 +41,33 @@ namespace Group_Animation
         velocity += move * avoid_factor;
         velocity = glm::normalize(velocity);
 
-        position += velocity * delta_time;
+
+        if (position.x < -1) {
+            velocity.x += 0.1f;
+        }
+        if (position.x > 1) {
+            velocity.x -= 0.1f;
+        }
+        if (position.y < -1) {
+            velocity.y += 0.1f;
+        }
+        if (position.y > 1) {
+            velocity.y -= 0.1f;
+        }
+        if (position.z < -1) {
+            velocity.z += 0.1f;
+        }
+        if (position.z > 1) {
+            velocity.z -= 0.1f;
+        }
         rotation = glm::quatLookAt(velocity, glm::vec3{0.0f, 1.0f, 0.0f});
+        position += velocity * delta_time;
+        // std::cout << std::format("{:.2f} {:.2f} {:.2f}\n", position.x, position.y, position.z);
     }
 
     auto Boid::get_affine_matrix() -> glm::mat4x4
     {
-        return glm::translate(glm::mat4x4(1.0f), position) * glm::toMat4(rotation);
+        return glm::translate(glm::mat4x4(1.0f), position) * glm::toMat4(rotation) * glm::scale(glm::mat4x4(1.0f), glm::vec3(0.002f));
     }
 
     auto Flock::init() -> void

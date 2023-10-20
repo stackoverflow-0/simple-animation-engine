@@ -41,7 +41,7 @@ int main()
 
     auto world_matrix = glm::mat4(1.0f);
 
-    auto projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(1024), float(768), 0.1f, 10.0f);
+    auto projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(1024), float(768), 0.1f, 20.0f);
 
     auto time{0.0f};
     auto last_clock = std::chrono::high_resolution_clock().now();
@@ -68,8 +68,8 @@ int main()
     Blendspace2D::Blend_Space_2D blend_space{};
     blend_space.init(human_with_skeleton, "asset/blend-space.json");
 
-    // Group_Animation::Flock flock{};
-    // flock.init();
+    Group_Animation::Flock flock{};
+    flock.init();
 
     auto display = [&]()
     {
@@ -85,16 +85,20 @@ int main()
         shader.setUniformMatrix4fv("world", world_matrix);
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         shader.setUniform3fv("cam_pos", render::window::cam_position);
+//
+        flock.update(0.01f);
+        flock.draw(shader);
+        shader.apply();
+        for (auto& boid: flock.boids) {
+            auto model_matrix = boid.get_affine_matrix();
+            shader.setUniformMatrix4fv("world", model_matrix);
+            shader.setUniform1i("import_animation", flock.boid_model.import_animation);
+            flock.boid_model.draw();
+        }
 
-        // flock.update(0.1f);
-        // flock.draw(shader);
-        // shader.apply();
-        // for (auto& boid: flock.boids) {
-        //     auto model_matrix = boid.get_affine_matrix();
-        //     shader.setUniformMatrix4fv("world", model_matrix);
-        //     shader.setUniform1i("import_animation", flock.boid_model.import_animation);
-        //     flock.boid_model.draw();
-        // }
+        shader.apply();
+        shader.setUniformMatrix4fv("world", world_matrix);
+        shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
 
         gizmo_shader.apply();
         gizmo_shader.setUniformMatrix4fv("world", world_matrix);
@@ -175,7 +179,7 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 0);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-        glEnable(GL_MULTISAMPLE); 
+        glEnable(GL_MULTISAMPLE);
         glCullFace(GL_BACK);
         auto human_with_skeleton_config_scale = human_with_skeleton.scale;
         auto gizmo_model_config_scale = gizmo_model.scale;

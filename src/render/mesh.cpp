@@ -94,7 +94,7 @@ namespace assimp_model
     {
         std::ifstream config_fs(ROOT_DIR + path);
         std::cout << "load config " << path << std::endl;
-        auto config = nlohmann::json::parse(config_fs);
+        auto config = nlohmann::json::parse(config_fs, nullptr, true, true);
 
         import_animation = config.find("import_animation").value();
 
