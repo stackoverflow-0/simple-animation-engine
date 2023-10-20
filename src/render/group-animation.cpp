@@ -14,8 +14,8 @@ namespace Group_Animation
         constexpr float avoid_factor{0.05f};
         constexpr float center_factor{0.01f};
         constexpr float align_factor{0.01f};
-        constexpr float visual_range{0.6f};
-        
+        constexpr float visual_range{0.4f};
+
         auto nav_point = glm::vec3{
             float(rand())/float(RAND_MAX) - 0.5f,
             float(rand())/float(RAND_MAX) - 0.5f,
@@ -67,7 +67,7 @@ namespace Group_Animation
     auto Flock::init() -> void
     {
         boid_model.load_with_config("asset/boid_config.json");
-        for (auto i = 0; i < 10; i++) {
+        for (auto i = 0; i < 100; i++) {
             boids.emplace_back(glm::vec3{float(rand())/float(RAND_MAX), float(rand())/float(RAND_MAX), float(rand())/float(RAND_MAX)});
         }
     }
