@@ -15,11 +15,19 @@ namespace Group_Animation
         constexpr float center_factor{0.01f};
         constexpr float align_factor{0.01f};
         constexpr float visual_range{0.6f};
+        
+        auto nav_point = glm::vec3{
+            float(rand())/float(RAND_MAX) - 0.5f,
+            float(rand())/float(RAND_MAX) - 0.5f,
+            float(rand())/float(RAND_MAX) - 0.5f
+        };
+
         glm::vec3 old_vec = velocity;
         glm::vec3 move{};
         glm::vec3 center{};
         glm::vec3 align_vec{};
         auto neighbor_num{0};
+
         for (auto& boid: boids) {
             auto dis = glm::distance(position, boid.position);
             if (dis < min_distance) {
@@ -40,26 +48,13 @@ namespace Group_Animation
         }
 
         velocity += move * avoid_factor;
+
         velocity = glm::normalize(velocity);
 
-        if (position.x < 0) {
-            velocity.x += 0.01f;
-        }
-        if (position.x >0) {
-            velocity.x -= 0.01f;
-        }
-        if (position.y < 0) {
-            velocity.y += 0.01f;
-        }
-        if (position.y >0) {
-            velocity.y -= 0.01f;
-        }
-        if (position.z < 0) {
-            velocity.z += 0.01f;
-        }
-        if (position.z >0) {
-            velocity.z -= 0.01f;
-        }
+        velocity.x += position.x < nav_point.x ? 0.01f : -0.01f;
+        velocity.y += position.y < nav_point.y ? 0.01f : -0.01f;
+        velocity.z += position.z < nav_point.z ? 0.01f : -0.01f;
+
         rotation = glm::rotation(glm::normalize(old_vec), glm::normalize(velocity)) * rotation;
         position += velocity * delta_time;
     }
