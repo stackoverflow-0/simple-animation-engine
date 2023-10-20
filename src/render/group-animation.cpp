@@ -1,5 +1,6 @@
 #include "group-animation.hpp"
 #include <format>
+#include <thread>
 
 namespace Group_Animation
 {
@@ -66,16 +67,31 @@ namespace Group_Animation
 
     auto Flock::init() -> void
     {
+        std::cout << "size of boid " << sizeof(Boid) << std::endl;
         boid_model.load_with_config("asset/boid_config.json");
-        for (auto i = 0; i < 100; i++) {
-            boids.emplace_back(glm::vec3{float(rand())/float(RAND_MAX), float(rand())/float(RAND_MAX), float(rand())/float(RAND_MAX)});
+        for (auto i = 0; i < 5e3; i++) {
+            boids.emplace_back(glm::vec3{float(rand())/float(RAND_MAX) - 0.5f , float(rand())/float(RAND_MAX) - 0.5f , float(rand())/float(RAND_MAX) - 0.5f});
         }
+        compute_shader = render::Shader{{{GL_COMPUTE_SHADER, "asset/shaders/Boid.comp"}}};
+        compute_shader.compile();
     }
 
     auto Flock::update(float delta_time) -> void
     {
-        for (auto& boid: boids) {
-            boid.update(boids, delta_time);
+        std::vector<std::thread> thds;
+        thds.resize(16);
+        auto idx{0};
+        for (auto& thd: thds) {
+            thd = std::thread([&](int id)-> void { 
+                for (auto i = id; i < 5e3; i += 16) {
+                    boids[i].update(boids, delta_time); 
+                }
+            }, idx);
+            idx++;
+        }
+        for (auto& thd: thds) {
+            if (thd.joinable())
+                thd.join();
         }
     }
 

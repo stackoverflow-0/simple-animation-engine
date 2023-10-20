@@ -18,9 +18,7 @@ namespace Group_Animation
         glm::vec3 position{};
         glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
         glm::vec3 velocity{0.0f, 0.0f, 1.0f};
-
-        float radius{1.0f};
-
+        
         auto strategy() -> void;
 
         auto get_affine_matrix() -> glm::mat4x4;
@@ -33,6 +31,8 @@ namespace Group_Animation
         std::vector<Boid> boids{};
 
         assimp_model::Model boid_model;
+
+        render::Shader compute_shader;
 
         auto init() -> void;
 
