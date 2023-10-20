@@ -46,7 +46,7 @@ void main()
 {
     // TODO : blend matrix should be done in local space, not in world space. Blending in world space will cause shrink problem.
 
-    mat4 bone_trans_mat = mat4(0.0);
+    mat4 bone_trans_mat = mat4(1.0);
     weight = 0;
     if (import_animation == true) {
         int base_idx = int(bone_weight_offset.x);

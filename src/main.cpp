@@ -87,12 +87,12 @@ int main()
         shader.setUniform3fv("cam_pos", render::window::cam_position);
 //
         flock.update(0.01f);
-        flock.draw(shader);
+        // flock.draw(shader);
         shader.apply();
         for (auto& boid: flock.boids) {
-            auto model_matrix = boid.get_affine_matrix();
+            auto model_matrix = boid.get_affine_matrix() * glm::scale(glm::mat4x4(1.0f), glm::vec3(flock.boid_model.scale));
             shader.setUniformMatrix4fv("world", model_matrix);
-            shader.setUniform1i("import_animation", flock.boid_model.import_animation);
+            shader.setUniform1i("import_animation", 0);
             flock.boid_model.draw();
         }
 
