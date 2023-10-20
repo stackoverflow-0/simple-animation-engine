@@ -16,8 +16,8 @@ namespace Group_Animation
     struct Boid final
     {
         glm::vec3 position{};
-        glm::quat rotation{};
-        glm::vec3 velocity{0.0f, 1.0f, 0.0f};
+        glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
+        glm::vec3 velocity{0.0f, 0.0f, 1.0f};
 
         float radius{1.0f};
 

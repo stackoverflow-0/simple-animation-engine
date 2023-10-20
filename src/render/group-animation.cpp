@@ -10,11 +10,12 @@ namespace Group_Animation
 
     auto Boid::update(std::vector<Boid>& boids, float delta_time) -> void
     {
-        constexpr float min_distance{0.1f};
+        constexpr float min_distance{0.3f};
         constexpr float avoid_factor{0.05f};
         constexpr float center_factor{0.01f};
         constexpr float align_factor{0.01f};
-        constexpr float visual_range{0.4f};
+        constexpr float visual_range{0.6f};
+        glm::vec3 old_vec = velocity;
         glm::vec3 move{};
         glm::vec3 center{};
         glm::vec3 align_vec{};
@@ -41,7 +42,6 @@ namespace Group_Animation
         velocity += move * avoid_factor;
         velocity = glm::normalize(velocity);
 
-
         if (position.x < 0) {
             velocity.x += 0.01f;
         }
@@ -60,9 +60,8 @@ namespace Group_Animation
         if (position.z >0) {
             velocity.z -= 0.01f;
         }
-        rotation = glm::quatLookAt(velocity, glm::vec3{0.0f, 1.0f, 0.0f});
+        rotation = glm::rotation(glm::normalize(old_vec), glm::normalize(velocity)) * rotation;
         position += velocity * delta_time;
-        // std::cout << std::format("{:.2f} {:.2f} {:.2f}\n", position.x, position.y, position.z);
     }
 
     auto Boid::get_affine_matrix() -> glm::mat4x4
