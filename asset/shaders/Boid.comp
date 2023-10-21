@@ -1,6 +1,6 @@
 #version 430
 
-layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 struct Boid {
     vec3 position;
@@ -8,23 +8,44 @@ struct Boid {
     vec3 velocity;
 };
 
-layout(std140, binding = 0) buffer UniformBuffer {
+layout(packed, binding = 0) buffer UniformBuffer {
     Boid boids[];
 };
 
 uniform int boid_num;
 
-vec4 rotate_from_to(vec3 a, vec3 b) {
-    float dotProduct = dot(a, b);
-    vec3 crossProduct = cross(a, b);
-    vec4 quaternion = vec4(crossProduct, dotProduct + length(crossProduct));
-    return quaternion;
+vec4 rotate_from_to(vec3 start, vec3 dest) {
+    float cosTheta  = dot(start, dest);
+    vec3 rotationAxis  = cross(start, dest);
+
+	float s = sqrt((1 + cosTheta) * 2);
+	float invs = 1 / s;
+
+	return vec4(
+		rotationAxis.x * invs,
+		rotationAxis.y * invs,
+		rotationAxis.z * invs,
+        s * 0.5
+	);
+}
+
+vec4 mul(vec4 a, vec4 b)
+{
+    return vec4(
+        a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+        a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
+        a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x,
+        a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z
+    );
 }
 
 void main() {
     int boid_id = int(gl_LocalInvocationIndex);
+    int total_thd =  
+        int(gl_NumWorkGroups.x * gl_NumWorkGroups.y * gl_NumWorkGroups.z
+        * gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z); 
 
-    const float delta_time = 0.1;
+    const float delta_time = 0.01;
 
     const float min_distance = 0.3;
     const float visual_range = 0.4;
@@ -33,42 +54,48 @@ void main() {
     const float align_factor = 0.01;
     const vec3 nav_point = vec3(0.0, 0.0, 0.0);
 
-    Boid b = boids[boid_id];
+    for (int idx = boid_id; idx < boid_num; idx += total_thd) {
+        Boid b = boids[idx];
 
-    vec3 old_vec = b.velocity;
+        vec3 old_vec = b.velocity;
 
-    vec3 move = vec3(0.0);
-    vec3 center = vec3(0.0);
-    vec3 align_vec = vec3(0.0);
+        vec3 move = vec3(0.0);
+        vec3 center = vec3(0.0);
+        vec3 align_vec = vec3(0.0);
 
-    int neighbor_num = 0;
+        int neighbor_num = 0;
 
-    for (int i = 0; i < boid_num; i++) {
-        Boid tb = boids[i];
-        float dis = distance(b.position, tb.position);
-        if (dis < min_distance) {
-            move += b.position - tb.position;
+        for (int i = 0; i < boid_num; i++) {
+            Boid tb = boids[i];
+            float dis = distance(b.position, tb.position);
+            if (dis < min_distance) {
+                move += b.position - tb.position;
+            }
+            if (dis < visual_range) {
+                center += tb.position;
+                align_vec += tb.velocity;
+                neighbor_num++;
+            }
         }
-        if (dis < visual_range) {
-            center += tb.position;
-            align_vec += tb.velocity;
-            neighbor_num++;
+        if (neighbor_num > 0) {
+            center /= float(neighbor_num);
+            align_vec /= float(neighbor_num);
+            b.velocity += (center - b.position) * center_factor;
+            b.velocity += (align_vec - b.velocity) * align_factor;
         }
-    }
-    if (neighbor_num > 0) {
-        center /= float(neighbor_num);
-        align_vec /= float(neighbor_num);
-        b.velocity += (center - b.position) * center_factor;
-        b.velocity += (align_vec - b.velocity) * align_factor;
-    }
-    b.velocity += move * avoid_factor;
-    b.velocity = normalize(b.velocity);
+        b.velocity += move * avoid_factor;
+        b.velocity = normalize(b.velocity);
 
-    b.velocity.x += b.position.x < nav_point.x ? 0.01 : -0.01;
-    b.velocity.y += b.position.y < nav_point.y ? 0.01 : -0.01;
-    b.velocity.z += b.position.z < nav_point.z ? 0.01 : -0.01;
+        b.velocity.x += b.position.x < nav_point.x ? 0.01 : -0.01;
+        b.velocity.y += b.position.y < nav_point.y ? 0.01 : -0.01;
+        b.velocity.z += b.position.z < nav_point.z ? 0.01 : -0.01;
 
-    b.rotation = rotate_from_to(normalize(old_vec), b.velocity) * b.rotation;
-    b.position += b.velocity * delta_time;
-    boids[boid_id] = b;
+        b.rotation = mul(rotate_from_to(normalize(old_vec), normalize(b.velocity)), b.rotation);
+        // b.rotation = vec4(b.rotation.w, b.rotation.xyz);
+        // b.rotation = rotate_from_to(normalize(old_vec), normalize(b.velocity));
+        // b.velocity = vec3(114, 514, 1919);
+        b.position += b.velocity * delta_time;
+        // b.position = vec3(5, 6, 7);
+        boids[idx] = b;
+    }
 }

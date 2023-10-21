@@ -15,9 +15,9 @@ namespace Group_Animation
 
     struct Boid final
     {
-        glm::vec3 position{};
+        glm::vec4 position{};
         glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
-        glm::vec3 velocity{0.0f, 0.0f, 1.0f};
+        glm::vec4 velocity{0.0f, 0.0f, 1.0f, 0.0f};
         
         auto strategy() -> void;
 
@@ -33,6 +33,10 @@ namespace Group_Animation
         assimp_model::Model boid_model;
 
         render::Shader compute_shader;
+
+        unsigned int boid_buffer{};
+
+        Boid* mappedData{nullptr};
 
         auto init() -> void;
 
