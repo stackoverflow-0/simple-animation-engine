@@ -2,7 +2,4 @@
     "model_path": "asset/models/boid_gizmo_z.fbx",
     "import_animation": false,
     "scale": 0.1
-    // "skeleton_root": "root",
-    // "play_anim_track": 0,
-    // "speed": 1.0
 }

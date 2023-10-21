@@ -13,6 +13,8 @@ namespace Group_Animation
 
     };
 
+    struct Flock;
+
     struct Boid final
     {
         glm::vec4 position{};
@@ -23,7 +25,7 @@ namespace Group_Animation
 
         auto get_affine_matrix() -> glm::mat4x4;
 
-        auto update(std::vector<Boid>& boids, float delta_time) -> void;
+        auto update(Flock& flock, float delta_time) -> void;
     };
 
     struct Flock final
@@ -36,9 +38,19 @@ namespace Group_Animation
 
         unsigned int boid_buffer{};
 
+        bool enable_gpu{true};
+
+        int boid_num{10000};
+
         Boid* mappedData{nullptr};
 
-        auto init() -> void;
+        float min_distance{0.3f};
+        float avoid_factor{0.05f};
+        float center_factor{0.01f};
+        float align_factor{0.01f};
+        float visual_range{0.4f};
+
+        auto init(const std::string flock_config_path) -> void;
 
         auto update(float delta_time) -> void;
 

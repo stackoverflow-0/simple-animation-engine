@@ -1,6 +1,6 @@
 #version 430
 
-layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 struct Boid {
     vec3 position;
@@ -13,6 +13,14 @@ layout(packed, binding = 0) buffer UniformBuffer {
 };
 
 uniform int boid_num;
+
+uniform float min_distance;
+uniform float visual_range;
+uniform float avoid_factor;
+uniform float center_factor;
+uniform float align_factor;
+
+uniform float delta_time;
 
 vec4 rotate_from_to(vec3 start, vec3 dest) {
     float cosTheta  = dot(start, dest);
@@ -40,18 +48,15 @@ vec4 mul(vec4 a, vec4 b)
 }
 
 void main() {
-    int boid_id = int(gl_LocalInvocationIndex);
-    int total_thd =  
-        int(gl_NumWorkGroups.x * gl_NumWorkGroups.y * gl_NumWorkGroups.z
-        * gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z); 
-
-    const float delta_time = 0.01;
-
-    const float min_distance = 0.3;
-    const float visual_range = 0.4;
-    const float avoid_factor = 0.05;
-    const float center_factor = 0.01;
-    const float align_factor = 0.01;
+    int boid_id = int(
+        (
+            gl_WorkGroupID.x +
+            gl_WorkGroupID.y * gl_NumWorkGroups.x +
+            gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y
+        ) * gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z + gl_LocalInvocationIndex
+    );
+    int total_thd = int(gl_NumWorkGroups.x * gl_NumWorkGroups.y * gl_NumWorkGroups.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z);
+    // total_thd = 16 * 16 * 64;
     const vec3 nav_point = vec3(0.0, 0.0, 0.0);
 
     for (int idx = boid_id; idx < boid_num; idx += total_thd) {
@@ -91,11 +96,7 @@ void main() {
         b.velocity.z += b.position.z < nav_point.z ? 0.01 : -0.01;
 
         b.rotation = mul(rotate_from_to(normalize(old_vec), normalize(b.velocity)), b.rotation);
-        // b.rotation = vec4(b.rotation.w, b.rotation.xyz);
-        // b.rotation = rotate_from_to(normalize(old_vec), normalize(b.velocity));
-        // b.velocity = vec3(114, 514, 1919);
         b.position += b.velocity * delta_time;
-        // b.position = vec3(5, 6, 7);
         boids[idx] = b;
     }
 }

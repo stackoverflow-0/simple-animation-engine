@@ -53,6 +53,8 @@ int main()
 
     auto show_bone_gizmo{false};
     auto show_blend_space{false};
+    auto show_skeleton_anim{true};
+    auto show_flock_anim{false};
 
     auto bone_gizmo_color = glm::vec4(0.0f, 1.0f, 0.7f, 1.0f);
 
@@ -69,7 +71,7 @@ int main()
     blend_space.init(human_with_skeleton, "asset/blend-space.json");
 
     Group_Animation::Flock flock{};
-    flock.init();
+    flock.init("asset/boid_config.json");
 
     auto display = [&]()
     {
@@ -83,16 +85,11 @@ int main()
         shader.setUniformMatrix4fv("world", world_matrix);
         shader.setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
         shader.setUniform3fv("cam_pos", render::window::cam_position);
-//
-        flock.update(0.01f);
-        // flock.draw(shader);
-        shader.apply();
-        for (auto& boid: flock.boids) {
-            auto model_matrix = boid.get_affine_matrix() * glm::scale(glm::mat4x4(1.0f), glm::vec3(flock.boid_model.scale));
-            shader.setUniformMatrix4fv("world", model_matrix);
-            shader.setUniform1i("import_animation", 0);
-            flock.boid_model.draw();
+        if (show_flock_anim) {
+            flock.update(delta_frame_time);
+            flock.draw(shader); 
         }
+        
 
         shader.apply();
         shader.setUniformMatrix4fv("world", world_matrix);
@@ -116,7 +113,6 @@ int main()
                 fps = 0;
             }
             if (! human_with_skeleton.import_animation) {
-
                 shader.apply();
                 human_with_skeleton.draw();
                 return;
@@ -154,8 +150,11 @@ int main()
         gizmo_shader.setUniform4fv("gizmo_color", bone_gizmo_color);
         gizmo_shader.setUniform1f("gizmo_scale", gizmo_model.scale);
 
-        shader.apply();
-        human_with_skeleton.draw();
+        if (show_skeleton_anim) {
+            shader.apply();
+            human_with_skeleton.draw();
+        }
+        
 
         if (show_bone_gizmo && gizmo_model.scale > 0.0f) {
             glDisable(GL_DEPTH_TEST);
@@ -193,13 +192,10 @@ int main()
                 auto anim_tool_active{true};
                 ImGui::Begin("Animation Tools", &anim_tool_active, ImGuiWindowFlags_::ImGuiWindowFlags_MenuBar);
                 ImGui::TextColored(ImVec4(1, 0, 0, 1), std::format("fps {:d}", final_fps).c_str());
-                if (human_with_skeleton.import_animation) {
+                ImGui::Checkbox("show skeleton animation", &show_skeleton_anim);
+                if (human_with_skeleton.import_animation && show_skeleton_anim) {
                     ImGui::SliderFloat("speed", &human_with_skeleton.speed, 0.0f, 2.0f);
                     ImGui::SliderFloat("scale", &human_with_skeleton.scale, 0.0f, human_with_skeleton_config_scale * 2.0f);
-                    if (!show_blend_space) {
-                        // ImGui::Text("%d - %s", human_with_skeleton.play_anim_track, human_with_skeleton.tracks[human_with_skeleton.play_anim_track].track_name.c_str());
-                        // ImGui::SliderInt("track", &human_with_skeleton.play_anim_track, 0, human_with_skeleton.tracks.size() - 1);
-                    }
 
                     if (human_with_skeleton.show_bone_weight_id >= 0)
                         ImGui::Text("%d - %s", human_with_skeleton.show_bone_weight_id, human_with_skeleton.bones[human_with_skeleton.show_bone_weight_id].name.c_str());
@@ -211,8 +207,6 @@ int main()
                     ImGui::Checkbox("show blend space", &show_blend_space);
                     // ImGui::InvisibleButton("layout", ImVec2(100, 100), 0);
                     if (show_blend_space) {
-                        // ImGui::SliderFloat("test weight", &blend_weights[0], 0.0f, 1.0f);
-                        // blend_weights[1] = 1.0f - blend_weights[0];
                         auto iID = ImGui::GetID("layout");
                         ImGui::PushID(iID);
                         auto component_width = 0.7f * (ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x);
@@ -272,6 +266,8 @@ int main()
                         );
                     }
 
+                    
+
                     ImGui::Checkbox("show bone gizmo", &show_bone_gizmo);
 
                     if (show_bone_gizmo) {
@@ -279,6 +275,17 @@ int main()
                         ImGui::ColorPicker4("gizmo color", reinterpret_cast<float*>(&bone_gizmo_color));
                     }
                     // ImGui::SliderFloat("gizmo scale", &gizmo_model.scale, 0.0f, gizmo_model_config_scale * 2.0f);
+                }
+                
+                ImGui::Checkbox("show flock animation", &show_flock_anim);
+                if (show_flock_anim) {
+                    ImGui::Checkbox("enable GPU compute", &flock.enable_gpu);
+                    ImGui::InputInt("boid_num", &flock.boid_num);
+                    ImGui::DragFloat("min_distance", &flock.min_distance, 0.01f, 0.0f, 1.0f);
+                    ImGui::DragFloat("visual_range", &flock.visual_range, 0.01f, 0.0f, 1.0f);
+                    ImGui::DragFloat("avoid_factor", &flock.avoid_factor, 0.01f, 0.0f, 0.1f);
+                    ImGui::DragFloat("center_factor", &flock.center_factor, 0.01f, 0.0f, 0.1f);
+                    ImGui::DragFloat("align_factor", &flock.align_factor, 0.01f, 0.0f, 0.1f);
                 }
                 ImGui::End();
                 ImGui::Render();
