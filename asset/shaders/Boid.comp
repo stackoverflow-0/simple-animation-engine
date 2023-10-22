@@ -91,9 +91,9 @@ void main() {
         b.velocity += move * avoid_factor;
         b.velocity = normalize(b.velocity);
 
-        b.velocity.x += b.position.x < nav_point.x ? 0.01 : -0.01;
-        b.velocity.y += b.position.y < nav_point.y ? 0.01 : -0.01;
-        b.velocity.z += b.position.z < nav_point.z ? 0.01 : -0.01;
+        b.velocity.x += b.position.x < nav_point.x ? 0.03 : -0.03;
+        b.velocity.y += b.position.y < nav_point.y ? 0.03 : -0.03;
+        b.velocity.z += b.position.z < nav_point.z ? 0.03 : -0.03;
 
         b.rotation = mul(rotate_from_to(normalize(old_vec), normalize(b.velocity)), b.rotation);
         b.position += b.velocity * delta_time;

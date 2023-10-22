@@ -1,6 +1,8 @@
 #include "group-animation.hpp"
+#include <nlohmann/json.hpp>
 #include <format>
 #include <thread>
+#include <fstream>
 
 namespace Group_Animation
 {
@@ -46,9 +48,9 @@ namespace Group_Animation
 
         velocity = glm::normalize(velocity);
 
-        velocity.x += position.x < nav_point.x ? 0.01f : -0.01f;
-        velocity.y += position.y < nav_point.y ? 0.01f : -0.01f;
-        velocity.z += position.z < nav_point.z ? 0.01f : -0.01f;
+        velocity.x += position.x < nav_point.x ? 0.03f : -0.03f;
+        velocity.y += position.y < nav_point.y ? 0.03f : -0.03f;
+        velocity.z += position.z < nav_point.z ? 0.03f : -0.03f;
 
         rotation = glm::rotation(glm::normalize(glm::vec3(old_vec)), glm::normalize(glm::vec3(velocity))) * rotation;
         position += velocity * delta_time;
@@ -59,9 +61,9 @@ namespace Group_Animation
         return glm::translate(glm::mat4x4(1.0f), glm::vec3(position)) * glm::toMat4(rotation);
     }
 
-    auto Flock::init(const std::string flock_config_path) -> void
+    auto Flock::init(const std::string boid_config_path, const std::string flock_config_path) -> void
     {
-        boid_model.load_with_config(flock_config_path);
+        boid_model.load_with_config(boid_config_path);
         for (auto i = 0; i < boid_num; i++) {
             boids.emplace_back(glm::vec4{float(rand())/float(RAND_MAX) - 0.5f , float(rand())/float(RAND_MAX) - 0.5f , float(rand())/float(RAND_MAX) - 0.5f, 0.0f});
         }
@@ -72,6 +74,15 @@ namespace Group_Animation
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, boid_buffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Boid) * boids.size(), boids.data(), GL_DYNAMIC_COPY);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, boid_buffer);
+
+        std::ifstream cfs(ROOT_DIR + flock_config_path);
+        auto flock_cfg = nlohmann::json::parse(cfs, nullptr, true, true);
+
+        min_distance = flock_cfg.find("min_distance").value();
+        visual_range = flock_cfg.find("visual_range").value();
+        avoid_factor = flock_cfg.find("avoid_factor").value();
+        center_factor = flock_cfg.find("center_factor").value();
+        align_factor = flock_cfg.find("align_factor").value();
 
     }
 

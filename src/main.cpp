@@ -71,7 +71,7 @@ int main()
     blend_space.init(human_with_skeleton, "asset/blend-space.json");
 
     Group_Animation::Flock flock{};
-    flock.init("asset/boid_config.json");
+    flock.init("asset/boid_config.json", "asset/flock_config.json");
 
     auto display = [&]()
     {

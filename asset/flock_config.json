@@ -1,0 +1,7 @@
+{
+    "min_distance": 0.16,
+    "avoid_factor": 0.05,
+    "center_factor": 0.01,
+    "align_factor": 0.07,
+    "visual_range": 0.4
+}

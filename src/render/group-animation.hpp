@@ -50,7 +50,7 @@ namespace Group_Animation
         float align_factor{0.01f};
         float visual_range{0.4f};
 
-        auto init(const std::string flock_config_path) -> void;
+        auto init(const std::string boid_config_path, const std::string flock_config_path) -> void;
 
         auto update(float delta_time) -> void;
 
