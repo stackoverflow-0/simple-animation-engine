@@ -52,9 +52,9 @@ namespace Group_Animation
         // velocity.y += - 0.01f * position.y;
         // velocity.z += - 0.01f * position.z;
 
-        velocity.x = position.x > 2.0 || position.x < - 2.0 ? - velocity.x : velocity.x + (position.x < nav_point.x ? 0.01 : -0.01);
-        velocity.y = position.y > 2.0 || position.y < - 2.0 ? - velocity.y : velocity.y + (position.y < nav_point.y ? 0.01 : -0.01);
-        velocity.z = position.z > 2.0 || position.z < - 2.0 ? - velocity.z : velocity.z + (position.z < nav_point.z ? 0.01 : -0.01);
+        velocity.x = position.x > 2.0 ? - glm::abs(velocity.x) : position.x < - 2.0 ? glm::abs(velocity.x) : velocity.x + (position.x < nav_point.x ? 0.01 : -0.01);
+        velocity.y = position.y > 2.0 ? - glm::abs(velocity.y) : position.y < - 2.0 ? glm::abs(velocity.y) : velocity.y + (position.y < nav_point.y ? 0.01 : -0.01);
+        velocity.z = position.z > 2.0 ? - glm::abs(velocity.z) : position.z < - 2.0 ? glm::abs(velocity.z) : velocity.z + (position.z < nav_point.z ? 0.01 : -0.01);
 
         velocity = glm::normalize(velocity);
 

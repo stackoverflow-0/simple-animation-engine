@@ -99,9 +99,9 @@ void main() {
         // b.velocity.y -= 0.0001 * b.position.y;
         // b.velocity.z -= 0.0001 * b.position.z;
 
-        b.velocity.x = b.position.x > 2.0 || b.position.x < - 2.0 ? -b.velocity.x : b.velocity.x + (b.position.x < nav_point.x ? 0.01 : -0.01);
-        b.velocity.y = b.position.y > 2.0 || b.position.y < - 2.0 ? -b.velocity.y : b.velocity.y + (b.position.y < nav_point.y ? 0.01 : -0.01);
-        b.velocity.z = b.position.z > 2.0 || b.position.z < - 2.0 ? -b.velocity.z : b.velocity.z + (b.position.z < nav_point.z ? 0.01 : -0.01);
+        b.velocity.x = b.position.x > 2.0 ? -abs(b.velocity.x) : b.position.x < - 2.0 ? abs(b.velocity.x) : b.velocity.x + (b.position.x < nav_point.x ? 0.01 : -0.01);
+        b.velocity.y = b.position.y > 2.0 ? -abs(b.velocity.y) : b.position.y < - 2.0 ? abs(b.velocity.y) : b.velocity.y + (b.position.y < nav_point.y ? 0.01 : -0.01);
+        b.velocity.z = b.position.z > 2.0 ? -abs(b.velocity.z) : b.position.z < - 2.0 ? abs(b.velocity.z) : b.velocity.z + (b.position.z < nav_point.z ? 0.01 : -0.01);
 
         b.velocity = normalize(b.velocity);
 
