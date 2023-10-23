@@ -40,7 +40,7 @@ namespace Group_Animation
 
         bool enable_gpu{true};
 
-        int boid_num{10000};
+        int boid_num{10};
 
         Boid* mappedData{nullptr};
 

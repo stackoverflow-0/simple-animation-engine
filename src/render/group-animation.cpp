@@ -13,11 +13,7 @@ namespace Group_Animation
 
     auto Boid::update(Flock& flock, float delta_time) -> void
     {
-        auto nav_point = glm::vec3{
-            float(rand())/float(RAND_MAX) - 0.5f,
-            float(rand())/float(RAND_MAX) - 0.5f,
-            float(rand())/float(RAND_MAX) - 0.5f
-        };
+        auto nav_point = glm::vec3{};
 
         glm::vec4 old_vec = velocity;
         glm::vec4 move{};
@@ -48,9 +44,19 @@ namespace Group_Animation
 
         velocity = glm::normalize(velocity);
 
-        velocity.x += position.x < nav_point.x ? 0.03f : -0.03f;
-        velocity.y += position.y < nav_point.y ? 0.03f : -0.03f;
-        velocity.z += position.z < nav_point.z ? 0.03f : -0.03f;
+        // velocity.x += position.x < nav_point.x ? 0.01f : -0.01f;
+        // velocity.y += position.y < nav_point.y ? 0.01f : -0.01f;
+        // velocity.z += position.z < nav_point.z ? 0.01f : -0.01f;
+
+        // velocity.x += - 0.01f * position.x;
+        // velocity.y += - 0.01f * position.y;
+        // velocity.z += - 0.01f * position.z;
+
+        velocity.x = position.x > 2.0 || position.x < - 2.0 ? - velocity.x : velocity.x + (position.x < nav_point.x ? 0.01 : -0.01);
+        velocity.y = position.y > 2.0 || position.y < - 2.0 ? - velocity.y : velocity.y + (position.y < nav_point.y ? 0.01 : -0.01);
+        velocity.z = position.z > 2.0 || position.z < - 2.0 ? - velocity.z : velocity.z + (position.z < nav_point.z ? 0.01 : -0.01);
+
+        velocity = glm::normalize(velocity);
 
         rotation = glm::rotation(glm::normalize(glm::vec3(old_vec)), glm::normalize(glm::vec3(velocity))) * rotation;
         position += velocity * delta_time;
@@ -72,7 +78,7 @@ namespace Group_Animation
 
         glGenBuffers(1, &boid_buffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, boid_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Boid) * boids.size(), boids.data(), GL_DYNAMIC_COPY);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, 10000 * sizeof(Boid), nullptr, GL_DYNAMIC_COPY);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, boid_buffer);
 
         std::ifstream cfs(ROOT_DIR + flock_config_path);
@@ -88,10 +94,17 @@ namespace Group_Animation
 
     auto Flock::update(float delta_time) -> void
     {
+        static auto gpu_data_dirty{true};
+
         if (boid_num != boids.size()) {
-            boids.resize(boid_num);
+            if (boids.size() >= boid_num) {
+                boids.resize(boid_num);    
+            } else {
+                while (boids.size() < boid_num)
+                    boids.emplace_back(Boid{glm::vec4{float(rand())/float(RAND_MAX) - 0.5f , float(rand())/float(RAND_MAX) - 0.5f , float(rand())/float(RAND_MAX) - 0.5f, 0.0f}});
+            }
+            gpu_data_dirty = true;
         }
-        static auto gpu_data_dirty{false};
         if (!enable_gpu) {
             gpu_data_dirty = true;
             std::vector<std::thread> thds;
@@ -112,13 +125,15 @@ namespace Group_Animation
         } else {
             if (gpu_data_dirty) {
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, boid_buffer);
-                glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Boid) * boids.size(), boids.data(), GL_DYNAMIC_COPY);
+                glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Boid) * boids.size(), boids.data());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, boid_buffer);
                 gpu_data_dirty = false;
             }
+
+            compute_shader.apply();
+            compute_shader.setUniform1i("boid_num", boids.size());
             
             compute_shader.apply();
-            compute_shader.setUniform1i("boid_num", boid_num);
             compute_shader.setUniform1f("min_distance", min_distance);
             compute_shader.setUniform1f("visual_range", visual_range);
             compute_shader.setUniform1f("avoid_factor", avoid_factor);
